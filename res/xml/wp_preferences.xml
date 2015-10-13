@@ -22,10 +22,6 @@
             android:key="pref_register"
             android:title="@string/pref_register__title"
             android:summary="@string/pref_register__summary">
-
-            <intent android:targetPackage="org.whispersystems.whisperpush"
-                    android:targetClass="org.whispersystems.whisperpush.ui.RegistrationActivity"/>
-
         </PreferenceScreen>
 
         <PreferenceScreen
@@ -39,17 +35,10 @@
         <PreferenceScreen
             android:title="@string/pref_my_identity__title"
             android:key="pref_myIdentity_setting">
-
-            <intent android:targetPackage="org.whispersystems.whisperpush"
-                    android:targetClass="org.whispersystems.whisperpush.ui.ViewMyIdentityActivity"/>
-
         </PreferenceScreen>
         <PreferenceScreen
-            android:title="@string/pref_review_keys__title">
-
-            <intent android:targetPackage="org.whispersystems.whisperpush"
-                    android:targetClass="org.whispersystems.whisperpush.ui.ReviewIdentitiesActivity"/>
-
+            android:title="@string/pref_review_keys__title"
+            android:key="pref_review_identities">>
     </PreferenceScreen>
     </PreferenceCategory>
 

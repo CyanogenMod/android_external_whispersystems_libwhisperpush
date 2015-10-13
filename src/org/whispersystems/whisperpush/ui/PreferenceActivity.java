@@ -30,6 +30,7 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -67,7 +68,7 @@ public class PreferenceActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.preferences_menu, menu);
+        inflater.inflate(R.menu.wp_preferences_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -101,6 +102,7 @@ public class PreferenceActivity extends Activity {
         private static final String PREF_REGISTER = "pref_register";
         private static final String PREF_UNREGISTER = "pref_unregister";
         private static final String PREF_MYIDENTITY = "pref_myIdentity_setting";
+        private static final String PREF_REVIEW_IDENTITIES = "pref_review_identities";
 
         private ProgressDialog mProgressDialog;
 
@@ -131,15 +133,19 @@ public class PreferenceActivity extends Activity {
             if (root != null) {
                 root.removeAll();
             }
-            addPreferencesFromResource(R.xml.preferences);
+            addPreferencesFromResource(R.xml.wp_preferences);
 
             mRegistrationCategory = (PreferenceCategory) findPreference(PREF_REGISTRATION_CATEGORY);
             mRegisterPreference = findPreference(PREF_REGISTER);
             mUnregisterPreference = findPreference(PREF_UNREGISTER);
+            mRegisterPreference.setOnPreferenceClickListener(this);
             mUnregisterPreference.setOnPreferenceClickListener(this);
 
             mOtherCategory = (PreferenceCategory) findPreference(PREF_OTHER_CATEGORY);
             mMyIdentityPreference = findPreference(PREF_MYIDENTITY);
+            mMyIdentityPreference.setOnPreferenceClickListener(this);
+
+            findPreference(PREF_REVIEW_IDENTITIES).setOnPreferenceClickListener(this);
 
             if (WhisperPreferences.isRegistered(getActivity())) {
                 Log.d(TAG, "WhisperPush is registered");
@@ -153,10 +159,19 @@ public class PreferenceActivity extends Activity {
 
         @Override
         public boolean onPreferenceClick(Preference preference) {
-            if (PREF_UNREGISTER.equals(preference.getKey())) {
+            Context context = getActivity();
+            if (PREF_REGISTER.equals(preference.getKey())) {
+                startActivity(new Intent(context, RegistrationActivity.class));
+            }
+            else if (PREF_UNREGISTER.equals(preference.getKey())) {
                 handleUnregister();
             }
-
+            else if (PREF_MYIDENTITY.equals(preference.getKey())) {
+                startActivity(new Intent(context, ViewMyIdentityActivity.class));
+            }
+            else if (PREF_REVIEW_IDENTITIES.equals(preference.getKey())) {
+                startActivity(new Intent(context, ReviewIdentitiesActivity.class));
+            }
             return true;
         }
 
