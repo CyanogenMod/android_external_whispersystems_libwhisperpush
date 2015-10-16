@@ -82,15 +82,15 @@ public class DirectoryRefreshService extends Service {
                 String                   localNumber = WhisperPreferences.getLocalNumber(context);
                 TextSecureAccountManager manager     = WhisperServiceFactory.createAccountManager(context);
 
-                Set<String>               eligibleContactTokens = directory.getPushEligibleContactNumbers(localNumber);
-                List<ContactTokenDetails> activeTokens          = manager.getContacts(eligibleContactTokens);
+                Set<String>               eligibleContactNumbers = directory.getPushEligibleContactNumbers(localNumber);
+                List<ContactTokenDetails> activeTokens          = manager.getContacts(eligibleContactNumbers);
 
                 if (activeTokens != null) {
                     for (ContactTokenDetails activeToken : activeTokens) {
-                        eligibleContactTokens.remove(activeToken.getToken());
+                        eligibleContactNumbers.remove(activeToken.getNumber());
                     }
 
-                    directory.setNumbers(activeTokens, eligibleContactTokens);
+                    directory.setNumbers(activeTokens, eligibleContactNumbers);
                 }
 
                 Log.w(TAG, "Directory refresh complete...");

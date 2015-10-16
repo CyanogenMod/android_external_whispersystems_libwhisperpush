@@ -162,7 +162,7 @@ public class Directory {
     db.replace(TABLE_NAME, null, values);
   }
 
-  public void setNumbers(List<ContactTokenDetails> activeTokens, Collection<String> inactiveTokens) {
+  public void setNumbers(List<ContactTokenDetails> activeTokens, Collection<String> inactiveNumbers) {
     long timestamp    = System.currentTimeMillis();
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     db.beginTransaction();
@@ -179,9 +179,9 @@ public class Directory {
         db.replace(TABLE_NAME, null, values);
       }
 
-      for (String token : inactiveTokens) {
+      for (String number : inactiveNumbers) {
         ContentValues values = new ContentValues();
-        values.put(NUMBER, token);
+        values.put(NUMBER, number);
         values.put(REGISTERED, 0);
         values.put(TIMESTAMP, timestamp);
         db.replace(TABLE_NAME, null, values);
