@@ -322,14 +322,14 @@ public class RegistrationService extends Service {
         String gcmRegistrationId = GcmHelper.getRegistrationId(this);
         manager.setGcmId(Optional.of(gcmRegistrationId));
 
-        Set<String>               eligibleContactTokens = Directory.getInstance(this).getPushEligibleContactNumbers(number);
-        List<ContactTokenDetails> activeTokens          = manager.getContacts(eligibleContactTokens);
+        Set<String>               eligibleContactNumber = Directory.getInstance(this).getPushEligibleContactNumbers(number);
+        List<ContactTokenDetails> activeTokens          = manager.getContacts(eligibleContactNumber);
 
         if (activeTokens != null) {
             for (ContactTokenDetails activeToken : activeTokens) {
-                eligibleContactTokens.remove(activeToken.getToken());
+                eligibleContactNumber.remove(activeToken.getNumber());
             }
-            Directory.getInstance(this).setNumbers(activeTokens, eligibleContactTokens);
+            Directory.getInstance(this).setNumbers(activeTokens, eligibleContactNumber);
         }
 
         DirectoryRefreshListener.schedule(this);
