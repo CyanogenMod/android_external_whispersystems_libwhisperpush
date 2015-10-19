@@ -76,7 +76,9 @@ public class OutgoingSmsListener extends BroadcastReceiver {
 
         String action = intent.getAction();
 
-        if (SMS_OUTGOING_ACTION.equals(action) && isRelevantOutgoingMessage(context, intent)) {
+        if (SMS_OUTGOING_ACTION.equals(action)
+                && context.getPackageName().equals(intent.getStringExtra("callingPackage"))
+                && isRelevantOutgoingMessage(context, intent)) {
             PendingResult pendingResult = goAsync();
             OutgoingMessage candidate = OutgoingMessage.fromSmsBroadcast(intent, pendingResult);
 
