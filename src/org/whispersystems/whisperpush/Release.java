@@ -21,5 +21,5 @@ public class Release {
     //public static final String GCM_SENDER_ID = "361461532168"; // cyanogen id
     public static final String GCM_SENDER_ID = "312334754206"; // ows id
     // if changing this, make sure the registration numbers are correct in res/values/config.xml
-    public static final String PUSH_URL = "https://textsecure-service-staging.whispersystems.org";
+    public static final String PUSH_URL = "https://textsecure-service.whispersystems.org";
 }
