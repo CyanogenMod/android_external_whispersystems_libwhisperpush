@@ -19,19 +19,15 @@ package org.whispersystems.whisperpush.sms;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.provider.Telephony;
-import android.telephony.SmsMessage;
 import android.util.Log;
 
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
+import org.whispersystems.whisperpush.api.OutgoingMessage;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
 import org.whispersystems.whisperpush.service.DirectoryRefreshListener;
-import org.whispersystems.whisperpush.service.RegistrationService;
 import org.whispersystems.whisperpush.service.SendReceiveService;
-import org.whispersystems.whisperpush.sms.OutgoingSmsQueue.OutgoingMessageCandidate;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
 
 /**
@@ -81,8 +77,8 @@ public class OutgoingSmsListener extends BroadcastReceiver {
         String action = intent.getAction();
 
         if (SMS_OUTGOING_ACTION.equals(action) && isRelevantOutgoingMessage(context, intent)) {
-            PendingResult            pendingResult = goAsync();
-            OutgoingMessageCandidate candidate     = new OutgoingMessageCandidate(intent, pendingResult);
+            PendingResult pendingResult = goAsync();
+            OutgoingMessage candidate = OutgoingMessage.fromSmsBroadcast(intent, pendingResult);
 
             OutgoingSmsQueue.getInstance().put(candidate);
 

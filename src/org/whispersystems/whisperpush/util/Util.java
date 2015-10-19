@@ -2,6 +2,8 @@ package org.whispersystems.whisperpush.util;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Collection;
+
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.InvalidKeyException;
 import org.whispersystems.textsecure.internal.util.Base64;
@@ -20,6 +22,14 @@ public class Util {
     public static boolean isEmpty(EditText value) {
         return value == null || value.getText() == null
                 || isEmpty(value.getText().toString());
+    }
+
+    public static boolean isEmpty(Collection<?> collection) {
+        return collection == null || collection.size() == 0;
+    }
+
+    public static boolean isNotEmpty(Collection<?> collection) {
+        return collection != null && collection.size() > 0;
     }
 
     public static void showAlertDialog(Context context, String title, String message) {

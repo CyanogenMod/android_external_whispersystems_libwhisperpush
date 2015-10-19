@@ -16,8 +16,11 @@
  */
 package org.whispersystems.whisperpush.service;
 
-import java.io.IOException;
-import java.util.List;
+import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.text.TextUtils;
+import android.util.Log;
 
 import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureAccountManager;
@@ -28,49 +31,60 @@ import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.push.TextSecureAddress;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
+import org.whispersystems.whisperpush.api.OutgoingMessage;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
-import org.whispersystems.whisperpush.sms.OutgoingSmsQueue.OutgoingMessageCandidate;
+import org.whispersystems.whisperpush.util.StatsUtils;
+import org.whispersystems.whisperpush.util.Util;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
-import org.whispersystems.whisperpush.util.StatsUtils;
 
-import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver.PendingResult;
-import android.content.Context;
-import android.content.Intent;
-import android.text.TextUtils;
-import android.util.Log;
+import java.io.IOException;
+import java.util.List;
 
 public class MessageSender {
 
-    private static final String PARTS        = "parts";
-    private static final String SENT_INTENTS = "sentIntents";
-
     private final Context context;
+    private final Directory directory;
 
-    public MessageSender(Context context) {
-        this.context = context.getApplicationContext();
+    private static volatile MessageSender instance;
+
+    public static MessageSender getInstance(Context context) {
+        if (instance == null) {
+            synchronized (MessageSender.class) {
+                if (instance == null) {
+                    instance = new MessageSender(context.getApplicationContext());
+                }
+            }
+        }
+        return instance;
     }
 
-    public void handleSendMessage(OutgoingMessageCandidate candidate) {
-        Log.d("MessageSender", "Got outgoing message candidate");
+    private MessageSender(Context context) {
+        this.context = context.getApplicationContext();
+        this.directory = Directory.getInstance(context);
+    }
 
-        if (candidate == null)
-            return;
+    public boolean sendMessage(OutgoingMessage message) {
+        Log.d("MessageSender", "Got outgoing message");
 
-        Intent sendIntent  = candidate.getIntent();
-        String destination = sendIntent.getStringExtra(SendReceiveService.DESTINATION);
+        List<String> destinations = message.getDestinations();
+        if (Util.isEmpty(destinations)) {
+            throw new IllegalArgumentException("destinations");
+        }
+        if (destinations.size() > 1) {
+            throw new RuntimeException("Multiple destination support is not implemented yet");
+        }
+        String destination = destinations.get(0);
 
         if (!isRegisteredUser(destination)) {
             Log.w("MessageSender", "Not a registered user...");
-            abortSendOperation(candidate);
-            return;
+            abortSendOperation(message);
+            return false;
         }
 
         try {
-            List<String>            messageParts = sendIntent.getStringArrayListExtra(PARTS);
+            List<String>            messageParts = message.getParts();
             // put destination in same format as was passed by isRegistered User above
             String                  localNumber  = WhisperPreferences.getLocalNumber(context);
             String                  e164number   = PhoneNumberFormatter.formatNumber(destination, localNumber);
@@ -81,44 +95,39 @@ public class MessageSender {
                                                                     .build();
             sender.sendMessage(address, body);
 
-            notifySendComplete(sendIntent);
-            completeSendOperation(candidate);
+            notifySendComplete(message);
+            completeSendOperation(message);
+            return true;
         } catch (IOException e) {
             Log.w("MessageSender", e);
-            abortSendOperation(candidate);
+            abortSendOperation(message);
         } catch (InvalidNumberException e) {
             Log.w("MessageSender", e);
-            abortSendOperation(candidate);
+            abortSendOperation(message);
         } catch (UntrustedIdentityException e) {
             Log.w("MessageSender", e);
-            abortSendOperation(candidate);
+            abortSendOperation(message);
         }
+        return false;
     }
 
-    private void completeSendOperation(OutgoingMessageCandidate candidate) {
-        PendingResult pendingResult = candidate.getPendingResult();
-        pendingResult.abortBroadcast();
-        pendingResult.setResultCode(Activity.RESULT_CANCELED);
-        pendingResult.finish();
-
+    private void completeSendOperation(OutgoingMessage message) {
+        message.completeOperation(Activity.RESULT_CANCELED);
         if (StatsUtils.isStatsActive(context)) {
             WhisperPreferences.setWasActive(context, true);
         }
     }
 
-    private void abortSendOperation(OutgoingMessageCandidate candidate) {
-        PendingResult pendingResult = candidate.getPendingResult();
-        pendingResult.finish();
+    private void abortSendOperation(OutgoingMessage message) {
+        message.abortOperation();
     }
 
-    private void notifySendComplete(Intent sendIntent) {
-        List<PendingIntent> sentIntents = sendIntent.getParcelableArrayListExtra(SENT_INTENTS);
-
-        if (sentIntents == null) {
+    private void notifySendComplete(OutgoingMessage candidate) {
+        List<PendingIntent> sentIntents = candidate.getSentIntents();
+        if (Util.isEmpty(sentIntents)) {
             Log.w("MessageSender", "Warning, no sent intents available!");
             return;
         }
-
         for (PendingIntent sentIntent : sentIntents) {
             try {
                 sentIntent.send(Activity.RESULT_OK);
@@ -128,7 +137,7 @@ public class MessageSender {
         }
     }
 
-    private boolean isRegisteredUser(String number) {
+    public boolean isRegisteredUser(String number) {
         Log.w("MessageSender", "Number to canonicalize: " + number);
         String    localNumber = WhisperPreferences.getLocalNumber(context);
         Directory directory   = Directory.getInstance(context);

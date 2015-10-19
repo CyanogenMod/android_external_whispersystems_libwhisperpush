@@ -25,7 +25,7 @@ import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
 import org.whispersystems.whisperpush.database.DatabaseFactory;
 import org.whispersystems.whisperpush.database.PendingApprovalDatabase;
 import org.whispersystems.whisperpush.sms.OutgoingSmsQueue;
-import org.whispersystems.whisperpush.sms.OutgoingSmsQueue.OutgoingMessageCandidate;
+import org.whispersystems.whisperpush.api.OutgoingMessage;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,12 +47,12 @@ public class SendReceiveService extends Service {
     private final ExecutorService  executor    = Executors.newCachedThreadPool();
     private final OutgoingSmsQueue outgoingQueue = OutgoingSmsQueue.getInstance();
 
-    private MessageSender   messageSender;
+    private MessageSender messageSender;
     private MessageReceiver messageReceiver;
 
     @Override
     public void onCreate() {
-        this.messageSender   = new MessageSender(this);
+        this.messageSender   = MessageSender.getInstance(this);
         this.messageReceiver = new MessageReceiver(this);
     }
 
@@ -75,8 +75,10 @@ public class SendReceiveService extends Service {
                             messageReceiver.handleEnvelope(message, true);
                         }
                     } else if (SEND_SMS.equals(action)) {
-                        OutgoingMessageCandidate message = outgoingQueue.get();
-                        messageSender.handleSendMessage(message);
+                        OutgoingMessage message = outgoingQueue.get();
+                        if (message != null) {
+                            messageSender.sendMessage(message);
+                        }
                     }
                 }
             });
