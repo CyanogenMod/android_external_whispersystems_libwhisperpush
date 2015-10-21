@@ -12,9 +12,10 @@ import android.content.Context;
 
 public class WhisperServiceFactory {
     public static TextSecureMessageSender createMessageSender(Context context) {
+        WhisperPreferences preferences = WhisperPreferences.getInstance(context);
         return new TextSecureMessageSender(Release.PUSH_URL,
                                            new WhisperPushTrustStore(context),
-                                           WhisperPreferences.getLocalNumber(context),
+                                           preferences.getLocalNumber(),
                                            WhisperPreferences.getPushServerPassword(context),
                                            WPAxolotlStore.getInstance(context),
                                            Optional.<EventListener>absent());
@@ -29,9 +30,10 @@ public class WhisperServiceFactory {
     }
 
     public static TextSecureAccountManager createAccountManager(Context context) {
+        WhisperPreferences preferences = WhisperPreferences.getInstance(context);
         return new TextSecureAccountManager(Release.PUSH_URL,
                                             new WhisperPushTrustStore(context),
-                                            WhisperPreferences.getLocalNumber(context),
+                                            preferences.getLocalNumber(),
                                             WhisperPreferences.getPushServerPassword(context));
     }
 

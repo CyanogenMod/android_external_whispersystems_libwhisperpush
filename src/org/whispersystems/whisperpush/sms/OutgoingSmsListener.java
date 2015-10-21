@@ -41,6 +41,7 @@ import org.whispersystems.whisperpush.util.WhisperPreferences;
  *
  * @author Moxie Marlinspike
  */
+@Deprecated
 public class OutgoingSmsListener extends BroadcastReceiver {
 
     private static final String SMS_OUTGOING_ACTION = "android.intent.action.NEW_OUTGOING_SMS";

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014 The CyanogenMod Project
+ * Copyright (C) 2015 The CyanogenMod Project
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,26 @@ package org.whispersystems.whisperpush;
 
 import java.io.IOException;
 
+import org.whispersystems.libaxolotl.util.guava.Optional;
+import org.whispersystems.textsecure.api.TextSecureAccountManager;
+import org.whispersystems.textsecure.api.push.ContactTokenDetails;
+import org.whispersystems.textsecure.api.util.InvalidNumberException;
+import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
+import org.whispersystems.whisperpush.directory.Directory;
+import org.whispersystems.whisperpush.directory.NotInDirectoryException;
 import org.whispersystems.whisperpush.gcm.GcmHelper;
+import org.whispersystems.whisperpush.service.WhisperPushMessageSender;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
+import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
-import android.app.Application;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class WhisperPush extends Application {
+import static org.whispersystems.whisperpush.util.Util.isEmpty;
+import static org.whispersystems.whisperpush.util.Util.isRunningOnMainThread;
+
+public class WhisperPush {
 
     private static final String TAG = WhisperPush.class.getSimpleName();
 
@@ -34,14 +45,112 @@ public class WhisperPush extends Application {
     private static final long MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR;
     private static final long UPDATE_INTERVAL = 7L * MILLIS_PER_DAY;
 
-    @Override
-    public void onCreate() {
-        long lastRegistered = WhisperPreferences.getGcmRegistrationTime(this);
+    private static volatile WhisperPush mInstance;
+
+    private final Context mContext;
+    private final WhisperPreferences mPreferences;
+    private final Directory mDirectory;
+    private volatile TextSecureAccountManager mTextSecureAccountManager;
+    private volatile WhisperPushMessageSender mMessageSender;
+
+    private static boolean visible = false;
+
+    public static WhisperPush getInstance(Context context) {
+        if (mInstance == null) {
+            synchronized (WhisperPush.class) {
+                if (mInstance == null) {
+                    mInstance = new WhisperPush(context.getApplicationContext());
+                }
+            }
+        }
+        return mInstance;
+    }
+
+    private WhisperPush(Context appContext) {
+        mContext = appContext;
+        mPreferences = WhisperPreferences.getInstance(appContext);
+        mDirectory = Directory.getInstance(appContext);
+        onCreate();
+    }
+
+    private TextSecureAccountManager getTextSecureAccountManager() {
+        if (mTextSecureAccountManager == null) {
+            synchronized (this) {
+                if (mTextSecureAccountManager == null) {
+                    mTextSecureAccountManager = WhisperServiceFactory.createAccountManager(mContext);
+                }
+            }
+        }
+        return mTextSecureAccountManager;
+    }
+
+    public WhisperPushMessageSender getMessageSender() {
+        if (mMessageSender == null) {
+            synchronized (this) {
+                if (mMessageSender == null) {
+                    mMessageSender = WhisperPushMessageSender.getInstance(mContext);
+                }
+            }
+        }
+        return mMessageSender;
+    }
+
+    public String getLocalNumber() {
+        return mPreferences.getLocalNumber();
+    }
+
+    public String formatNumber(String number) throws InvalidNumberException {
+        return PhoneNumberFormatter.formatNumber(number, getLocalNumber());
+    }
+
+    public boolean isSecureMessagingActive() {
+        return mPreferences.isRegistered();
+    }
+
+    public boolean isRecipientSupportsSecureMessaging(String number, boolean allowAskServer) {
+        if (allowAskServer && isRunningOnMainThread()) {
+            throw new IllegalStateException("isRecipientSupportsSecureMessaging() with allowAskServer == true called on main thread.");
+        }
+        if (isEmpty(number)) {
+            return false;
+        }
+        String localNumber = mPreferences.getLocalNumber();
+        if (isEmpty(localNumber)) {
+            return false;
+        }
+        String e164number;
+        try {
+            e164number = PhoneNumberFormatter.formatNumber(number, localNumber);
+        } catch (InvalidNumberException e) {
+            Log.w(TAG, e);
+            return false;
+        }
+        try {
+            return mDirectory.isActiveNumber(e164number);
+        } catch (NotInDirectoryException e) {
+            if (allowAskServer) {
+                TextSecureAccountManager accountManager = getTextSecureAccountManager();
+                try {
+                    Optional<ContactTokenDetails> contactDetails = accountManager.getContact(e164number);
+                    if (contactDetails.isPresent()) {
+                        mDirectory.setNumber(contactDetails.get(), true);
+                        return true;
+                    }
+                } catch (IOException ex) {
+                    Log.w(TAG, "Can't get contact token details", ex);
+                }
+            }
+            return false;
+        }
+    }
+
+    private void onCreate() { //TODO fix and refactor
+        long lastRegistered = WhisperPreferences.getGcmRegistrationTime(mContext);
 
         if(lastRegistered != -1
                 && (lastRegistered + UPDATE_INTERVAL) < System.currentTimeMillis()) {
             //It has been a week, reregister
-            launchGcmRegistration(this);
+            launchGcmRegistration(mContext);
         }
     }
 
@@ -67,8 +176,6 @@ public class WhisperPush extends Application {
             }
         }.execute();
     }
-
-    private static boolean visible = false;
 
     public static void activityResumed() {
         visible = true;

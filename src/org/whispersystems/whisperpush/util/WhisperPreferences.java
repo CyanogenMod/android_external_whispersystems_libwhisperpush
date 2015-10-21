@@ -18,13 +18,12 @@ package org.whispersystems.whisperpush.util;
 
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Pair;
 
 /**
  * A layer of indirection in front of the app's SharedPreferences.
- *
- * @author Moxie Marlinspike
  */
 public class WhisperPreferences {
 
@@ -43,6 +42,58 @@ public class WhisperPreferences {
     private static final String PREF_WAS_ACTIVE             = "pref_was_active";
     private static final String PREF_NEXT_STAT_TIME         = "pref_next_stat_time";
     private static final String PREF_INSTALL_ID             = "pref_install_id";
+
+    private static volatile WhisperPreferences mInstance;
+
+    private final Context mContext;
+    private final SharedPreferences mPreferences;
+    private volatile String mLocalNumber;
+    private volatile Boolean mIsRegistered;
+
+    public static WhisperPreferences getInstance(Context context) {
+        if (mInstance == null) {
+            synchronized (WhisperPreferences.class) {
+                if (mInstance == null) {
+                    mInstance = new WhisperPreferences(context.getApplicationContext());
+                }
+            }
+        }
+        return mInstance;
+    }
+
+    private WhisperPreferences(Context appContext) {
+        mContext = appContext;
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(appContext);
+        mPreferences.registerOnSharedPreferenceChangeListener(mPreferenceChangeListener);
+    }
+
+    private final SharedPreferences.OnSharedPreferenceChangeListener mPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
+            if (PREF_LOCAL_NUMBER.equals(key)) {
+                mLocalNumber = null;
+            }
+            else if (PREF_REGISTRATION_COMPLETE.equals(key)) {
+                mIsRegistered = null;
+            }
+        }
+    };
+
+    public String getLocalNumber() {
+        String localNumber = mLocalNumber;
+        if (localNumber == null) {
+            mLocalNumber = localNumber = getLocalNumber(mContext);
+        }
+        return localNumber;
+    }
+
+    public boolean isRegistered() {
+        Boolean isRegistered = mIsRegistered;
+        if (isRegistered == null) {
+            mIsRegistered = isRegistered = isRegistered(mContext);
+        }
+        return isRegistered;
+    }
 
     public static long getDirectoryRefreshTime(Context context) {
         return getLongPreference(context, PREF_DIRECTORY_REFRESH_TIME, 0);

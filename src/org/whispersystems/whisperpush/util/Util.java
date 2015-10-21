@@ -7,14 +7,51 @@ import java.util.Collection;
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.InvalidKeyException;
 import org.whispersystems.textsecure.internal.util.Base64;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.EditText;
 
 public class Util {
+
+    private static final boolean ASSERT_MAIN_THREAD = /*BuildConfig.DEBUG*/true;
+
+    private static class MainThreadReferenceHolder { // Lazy Holder idiom class
+        static final Thread MAIN_THREAD = getMainThread();
+
+        private static Thread getMainThread() {
+            try {
+                return Looper.getMainLooper().getThread();
+            }
+            catch (RuntimeException ex) {
+                if (ex.getMessage() != null && ex.getMessage().contains("not mocked")) {
+                    return null;
+                }
+                throw ex;
+            }
+        }
+    }
+
+    public static final boolean isRunningOnMainThread() {
+        return Thread.currentThread() == MainThreadReferenceHolder.MAIN_THREAD;
+    }
+
+    public static final void preventRunningOnMainThread() {
+        if (ASSERT_MAIN_THREAD && Thread.currentThread() == MainThreadReferenceHolder.MAIN_THREAD) {
+            throw new RuntimeException("Possibly long operation has been running in the main thread");
+        }
+    }
+
+    public static final void ensureRunningOnMainThread() {
+        if (ASSERT_MAIN_THREAD && Thread.currentThread() != MainThreadReferenceHolder.MAIN_THREAD) {
+            throw new RuntimeException("Should be running in the main thread");
+        }
+    }
+
     public static boolean isEmpty(String value) {
         return value == null || value.trim().length() == 0;
     }

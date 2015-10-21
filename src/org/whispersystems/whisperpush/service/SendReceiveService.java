@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
+import org.whispersystems.whisperpush.WhisperPush;
 import org.whispersystems.whisperpush.database.DatabaseFactory;
 import org.whispersystems.whisperpush.database.PendingApprovalDatabase;
 import org.whispersystems.whisperpush.sms.OutgoingSmsQueue;
@@ -47,12 +48,12 @@ public class SendReceiveService extends Service {
     private final ExecutorService  executor    = Executors.newCachedThreadPool();
     private final OutgoingSmsQueue outgoingQueue = OutgoingSmsQueue.getInstance();
 
-    private MessageSender messageSender;
+    private volatile WhisperPush whisperPush;
     private MessageReceiver messageReceiver;
 
     @Override
     public void onCreate() {
-        this.messageSender   = MessageSender.getInstance(this);
+        this.whisperPush = WhisperPush.getInstance(this);
         this.messageReceiver = new MessageReceiver(this);
     }
 
@@ -77,7 +78,7 @@ public class SendReceiveService extends Service {
                     } else if (SEND_SMS.equals(action)) {
                         OutgoingMessage message = outgoingQueue.get();
                         if (message != null) {
-                            messageSender.sendMessage(message);
+                            whisperPush.getMessageSender().sendMessage(message);
                         }
                     }
                 }
