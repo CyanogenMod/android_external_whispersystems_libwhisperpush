@@ -21,9 +21,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.whispersystems.libaxolotl.InvalidMessageException;
+import org.whispersystems.textsecure.api.TextSecureMessageReceiver;
+import org.whispersystems.textsecure.api.messages.TextSecureAttachmentPointer;
 import org.whispersystems.textsecure.internal.util.Util;
 
 import android.content.Context;
+
+import com.google.android.mms.ContentType;
 
 /**
  * The manager responsible for storing and retrieving received attachments.
@@ -57,6 +62,14 @@ public class AttachmentManager {
         Util.copy(attachment, fout);
 
         return stored.getName();
+    }
+
+    public InputStream store(TextSecureAttachmentPointer pointer, TextSecureMessageReceiver receiver) throws IOException, InvalidMessageException {
+        File attachmentDirectory = new File(context.getFilesDir(), "attachments");
+        attachmentDirectory.mkdirs();
+
+        File stored = File.createTempFile("attachment", ".store", attachmentDirectory);
+        return receiver.retrieveAttachment(pointer, stored);
     }
 
     public File get(String token) {
