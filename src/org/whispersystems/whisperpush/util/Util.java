@@ -146,7 +146,6 @@ public class Util {
         }
 
     }
-}
 
     public static long extractMessageId(Uri uri) {
         if (uri == null) {
