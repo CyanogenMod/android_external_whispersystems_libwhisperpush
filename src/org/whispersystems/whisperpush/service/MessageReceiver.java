@@ -96,7 +96,7 @@ public class MessageReceiver {
         }
 
         if (envelope.isReceipt()) handleReceipt(envelope);
-        else                      handleMessage(envelope, sendExplicitReceipt);
+        else                      handleMessage(envelope);
     }
 
     private boolean isActiveNumber(Context context, String e164number) {
@@ -141,7 +141,7 @@ public class MessageReceiver {
 
             if (attach.isPresent()) {
                 try {
-                    attachments = retrieveAttachments(source, message.getRelay(), attach.get());
+                    attachments = retrieveAttachments(source, attach.get());
                     SmsServiceBridge.receivedPushMultimediaMessage(context, source, body,
                             attachments, timestamp);
                 } catch (IOException e) {
@@ -258,7 +258,7 @@ public class MessageReceiver {
     public interface SecureMessageSaver {
         void saveSecureMessage(String from,
                                String message,
-                               List<Pair<String,String>> attachments);
+                               List<Pair<String, String>> attachments);
     }
 
 }
