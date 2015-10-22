@@ -20,7 +20,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.util.Log;
@@ -28,6 +27,7 @@ import android.util.Log;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
+import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,26 +35,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.NUMBER;
+import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.REGISTERED;
+import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.RELAY;
+import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.SUPPORTS_SMS;
+import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TABLE_NAME;
+import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TIMESTAMP;
+
 public class Directory {
-
-  private static final int INTRODUCED_CHANGE_FROM_TOKEN_TO_E164_NUMBER = 2;
-
-  private static final String DATABASE_NAME    = "whisper_directory.db";
-  private static final int    DATABASE_VERSION = 2;
-
-  private static final String TABLE_NAME   = "directory";
-  private static final String ID           = "_id";
-  private static final String NUMBER       = "number";
-  private static final String REGISTERED   = "registered";
-  private static final String RELAY        = "relay";
-  private static final String SUPPORTS_SMS = "supports_sms";
-  private static final String TIMESTAMP    = "timestamp";
-  private static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "(" + ID + " INTEGER PRIMARY KEY, " +
-                              NUMBER       + " TEXT UNIQUE, " +
-                              REGISTERED   + " INTEGER, " +
-                              RELAY        + " TEXT, " +
-                              SUPPORTS_SMS + " INTEGER, " +
-                              TIMESTAMP    + " INTEGER);";
 
   private static final Object instanceLock = new Object();
   private static volatile Directory instance;
@@ -71,12 +59,12 @@ public class Directory {
     return instance;
   }
 
-  private final DatabaseHelper databaseHelper;
-  private final Context        context;
+  private final Context context;
+  private final WhisperPushDbHelper databaseHelper;
 
   private Directory(Context context) {
     this.context = context;
-    this.databaseHelper = new DatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
+    this.databaseHelper = WhisperPushDbHelper.getInstance(context);
   }
 
   public boolean isSmsFallbackSupported(String e164number) {
@@ -250,31 +238,4 @@ public class Directory {
     }
   }
 
-  private class DatabaseHelper extends SQLiteOpenHelper {
-
-    public DatabaseHelper(Context context, String name,
-                          SQLiteDatabase.CursorFactory factory,
-                          int version)
-    {
-      super(context, name, factory, version);
-    }
-
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-      db.execSQL(CREATE_TABLE);
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      if (oldVersion < INTRODUCED_CHANGE_FROM_TOKEN_TO_E164_NUMBER) {
-        db.execSQL("DROP TABLE directory;");
-        db.execSQL("CREATE TABLE directory ( _id INTEGER PRIMARY KEY, " +
-                   "number TEXT UNIQUE, " +
-                   "registered INTEGER, " +
-                   "relay TEXT, " +
-                   "supports_sms INTEGER, " +
-                   "timestamp INTEGER);");
-      }
-    }
-  }
 }

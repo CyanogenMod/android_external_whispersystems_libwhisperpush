@@ -3,6 +3,7 @@ package org.whispersystems.whisperpush.util;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Collection;
+import java.util.List;
 
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.InvalidKeyException;
@@ -12,11 +13,14 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.EditText;
 
 public class Util {
+
+    private static final String TAG = "Util";
 
     private static final boolean ASSERT_MAIN_THREAD = /*BuildConfig.DEBUG*/true;
 
@@ -102,4 +106,25 @@ public class Util {
             return null;
         }
     }
+
+    public static long extractMessageId(Uri uri) {
+        if (uri == null) {
+            return 0;
+        }
+        String authority = uri.getAuthority();
+        if ("sms".equals(authority) || "mms".equals(authority) || "mms-sms".equals(authority)) {
+            String lastPathSegment = uri.getLastPathSegment();
+            try {
+                return Long.parseLong(lastPathSegment);
+            }
+            catch (NumberFormatException ex) {
+                Log.e(TAG, "extractMessageId()", ex);
+            }
+        }
+        else {
+            Log.w(TAG, "extractMessageId() - unknown authority");
+        }
+        return 0;
+    }
+
 }
