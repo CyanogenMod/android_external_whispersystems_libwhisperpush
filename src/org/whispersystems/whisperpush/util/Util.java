@@ -1,5 +1,9 @@
 package org.whispersystems.whisperpush.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Collection;
@@ -17,6 +21,8 @@ import android.net.Uri;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.EditText;
+
+import com.google.android.mms.pdu.CharacterSets;
 
 public class Util {
 
@@ -106,6 +112,41 @@ public class Util {
             return null;
         }
     }
+
+    public static String toIsoString(byte[] bytes) {
+        try {
+            return new String(bytes, CharacterSets.MIMENAME_ISO_8859_1);
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("ISO_8859_1 must be supported!");
+        }
+    }
+
+    public static byte[] toIsoBytes(String isoString) {
+        try {
+            return isoString.getBytes(CharacterSets.MIMENAME_ISO_8859_1);
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("ISO_8859_1 must be supported!");
+        }
+    }
+
+    public static byte[] readBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+
+        try {
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                byteBuffer.write(buffer, 0, len);
+            }
+            byteBuffer.flush();
+
+            return byteBuffer.toByteArray();
+        } finally {
+            byteBuffer.close();
+        }
+
+    }
+}
 
     public static long extractMessageId(Uri uri) {
         if (uri == null) {
