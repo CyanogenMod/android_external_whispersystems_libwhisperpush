@@ -111,6 +111,43 @@ public class Directory {
     }
   }
 
+  public boolean isAllActiveNumbers(String[] e164numbers) {
+      if (e164numbers == null || e164numbers.length == 0) {
+          return false;
+      }
+
+      boolean isAllNumbersActive = false;
+      SQLiteDatabase db = databaseHelper.getReadableDatabase();
+      Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER},
+              REGISTERED + " = 1", null, null, null, null);
+
+      if (cursor == null || !cursor.moveToFirst()) {
+          return false;
+      }
+
+      for (String e164number : e164numbers) {
+          e164number = e164number.replace(" ", "");
+          cursor.moveToFirst();
+          do {
+              if (e164number.equals(cursor.getString(0))) {
+                  isAllNumbersActive = true;
+                  break;
+              } else {
+                  isAllNumbersActive = false;
+              }
+          } while (cursor.moveToNext());
+
+          // if at least one number is not active, break and return false
+          if (!isAllNumbersActive) {
+              cursor.close();
+              return false;
+          }
+      }
+      cursor.close();
+
+      return isAllNumbersActive;
+  }
+
   public void setActiveNumberAndRelay(String e164number, String relay) {
     if (e164number == null || e164number.length() == 0) { return; }
 
