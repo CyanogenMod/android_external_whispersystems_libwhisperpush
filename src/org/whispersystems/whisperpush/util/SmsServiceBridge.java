@@ -23,9 +23,7 @@ import java.util.List;
 
 import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.whisperpush.R;
-import org.whispersystems.whisperpush.contacts.Contact;
-import org.whispersystems.whisperpush.contacts.ContactsFactory;
-import org.whispersystems.whisperpush.service.MessageNotifier;
+import org.whispersystems.whisperpush.service.MessageReceiver;
 
 import android.content.Context;
 import android.os.IBinder;
@@ -40,20 +38,21 @@ import com.android.internal.telephony.ISms;
  */
 public class SmsServiceBridge {
 
-    public static void receivedPushMessage(
+    public static void receivedPushMultimediaMessage(
             Context context, String source, Optional<String> message,
-            List<Pair<String,String>> attachments, long timestampSent)
-    {
+            List<Pair<String,String>> attachments, long timestampSent) {
+        if (context.getApplicationContext() instanceof MessageReceiver.SecureMessageSaver) {
+            ((MessageReceiver.SecureMessageSaver) context.getApplicationContext()).
+                    saveSecureMessage(source, message.get(), attachments);
+        }
+    }
+
+    public static void receivedPushTextMessage(Context context, String source,
+                                               Optional<String> message,long timestampSent) {
         try {
             Class<?> serviceManager = Class.forName("android.os.ServiceManager");
             Method   getService     = serviceManager.getMethod("getService", String.class);
             ISms     framework      = ISms.Stub.asInterface((IBinder) getService.invoke(null, "isms"));
-
-            if (attachments != null && attachments.size() != 0) {
-                Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
-                MessageNotifier.notifyProblem(context, contact,
-                        context.getString(R.string.SmsServiceBridge_received_encrypted_attachment));
-            }
 
             framework.synthesizeMessages(source, null, getAsList(message), timestampSent);
         } catch (ClassNotFoundException e) {
