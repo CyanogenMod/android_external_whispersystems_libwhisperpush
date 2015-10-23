@@ -12,6 +12,7 @@ import java.util.List;
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.InvalidKeyException;
 import org.whispersystems.textsecure.internal.util.Base64;
+import org.whispersystems.whisperpush.exception.IllegalUriException;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -73,6 +74,10 @@ public class Util {
 
     public static boolean isEmpty(Collection<?> collection) {
         return collection == null || collection.size() == 0;
+    }
+
+    public static int getSize(Collection<?> collection) {
+        return collection != null ? collection.size() : 0;
     }
 
     public static boolean isNotEmpty(Collection<?> collection) {
@@ -147,24 +152,21 @@ public class Util {
 
     }
 
-    public static long extractMessageId(Uri uri) {
+    public static long extractMessageId(Uri uri) throws IllegalUriException {
         if (uri == null) {
-            return 0;
+            throw  new IllegalUriException("uri == null");
         }
         String authority = uri.getAuthority();
         if ("sms".equals(authority) || "mms".equals(authority) || "mms-sms".equals(authority)) {
             String lastPathSegment = uri.getLastPathSegment();
             try {
                 return Long.parseLong(lastPathSegment);
+            } catch (NumberFormatException ex) {
+                throw  new IllegalUriException(ex);
             }
-            catch (NumberFormatException ex) {
-                Log.e(TAG, "extractMessageId()", ex);
-            }
+        } else {
+            throw new IllegalUriException("Unsupported authority");
         }
-        else {
-            Log.w(TAG, "extractMessageId() - unknown authority");
-        }
-        return 0;
     }
 
 }

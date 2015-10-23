@@ -23,6 +23,7 @@ import org.whispersystems.textsecure.api.TextSecureAccountManager;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
+import org.whispersystems.whisperpush.db.MessageDirectory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
 import org.whispersystems.whisperpush.gcm.GcmHelper;
@@ -49,7 +50,8 @@ public class WhisperPush {
 
     private final Context mContext;
     private final WhisperPreferences mPreferences;
-    private final Directory mDirectory;
+    private final Directory mContactDirectory;
+    private final MessageDirectory mMessageDirectory;
     private volatile TextSecureAccountManager mTextSecureAccountManager;
     private volatile WhisperPushMessageSender mMessageSender;
 
@@ -69,7 +71,8 @@ public class WhisperPush {
     private WhisperPush(Context appContext) {
         mContext = appContext;
         mPreferences = WhisperPreferences.getInstance(appContext);
-        mDirectory = Directory.getInstance(appContext);
+        mContactDirectory = Directory.getInstance(appContext);
+        mMessageDirectory = MessageDirectory.getInstance(appContext);
         onCreate();
     }
 
@@ -93,6 +96,14 @@ public class WhisperPush {
             }
         }
         return mMessageSender;
+    }
+
+    public Directory getContactDirectory() {
+        return mContactDirectory;
+    }
+
+    public MessageDirectory getMessageDirectory() {
+        return mMessageDirectory;
     }
 
     public String getLocalNumber() {
@@ -126,14 +137,14 @@ public class WhisperPush {
             return false;
         }
         try {
-            return mDirectory.isActiveNumber(e164number);
+            return mContactDirectory.isActiveNumber(e164number);
         } catch (NotInDirectoryException e) {
             if (allowAskServer) {
                 TextSecureAccountManager accountManager = getTextSecureAccountManager();
                 try {
                     Optional<ContactTokenDetails> contactDetails = accountManager.getContact(e164number);
                     if (contactDetails.isPresent()) {
-                        mDirectory.setNumber(contactDetails.get(), true);
+                        mContactDirectory.setNumber(contactDetails.get(), true);
                         return true;
                     }
                 } catch (IOException ex) {
