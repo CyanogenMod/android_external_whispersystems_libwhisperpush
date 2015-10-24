@@ -16,22 +16,16 @@
  */
 package org.whispersystems.whisperpush.util;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.List;
-
-import org.whispersystems.libaxolotl.util.guava.Optional;
-import org.whispersystems.whisperpush.R;
-import org.whispersystems.whisperpush.service.MessageReceiver;
-
 import android.content.Context;
-import android.os.IBinder;
-import android.os.RemoteException;
+import android.net.Uri;
+import android.provider.Telephony.Sms;
 import android.util.Log;
 import android.util.Pair;
 
-import com.android.internal.telephony.ISms;
+import org.whispersystems.libaxolotl.util.guava.Optional;
+import org.whispersystems.whisperpush.service.MessageReceiver;
+
+import java.util.List;
 
 /**
  * A helper class to handle the WhisperPush --> System Framework binding.
@@ -40,36 +34,20 @@ public class SmsServiceBridge {
 
     public static void receivedPushMultimediaMessage(
             Context context, String source, Optional<String> message,
-            List<Pair<String,String>> attachments, long timestampSent) {
+            List<Pair<String,String>> attachments, long sentTimestamp) {
         if (context.getApplicationContext() instanceof MessageReceiver.SecureMessageSaver) {
             ((MessageReceiver.SecureMessageSaver) context.getApplicationContext()).
-                    saveSecureMessage(source, message.get(), attachments);
+                    saveSecureMessage(source, message.get(), attachments, sentTimestamp);
         }
     }
 
-    public static void receivedPushTextMessage(Context context, String source,
-                                               Optional<String> message,long timestampSent) {
-        try {
-            Class<?> serviceManager = Class.forName("android.os.ServiceManager");
-            Method   getService     = serviceManager.getMethod("getService", String.class);
-            ISms     framework      = ISms.Stub.asInterface((IBinder) getService.invoke(null, "isms"));
-
-            framework.synthesizeMessages(source, null, getAsList(message), timestampSent);
-        } catch (ClassNotFoundException e) {
-            throw new AssertionError(e);
-        } catch (NoSuchMethodException e) {
-            throw new AssertionError(e);
-        } catch (IllegalAccessException e) {
-            throw new AssertionError(e);
-        } catch (InvocationTargetException e) {
-            throw new AssertionError(e);
-        } catch (RemoteException e) {
-            throw new AssertionError(e);
-        }
-    }
-
-    private static List<String> getAsList(Optional<String> message) {
-        return Collections.singletonList(message.or(""));
+    public static Uri receivedPushTextMessage(Context context, int subId, String source,
+                                              Optional<String> message, long timestampSent) {
+        Uri messageUri = Sms.Inbox.addMessage(subId, context.getContentResolver(),
+                source,
+                message.get(), null /*subject*/, timestampSent,
+                false /*read*/);
+        return messageUri;
     }
 
     @SuppressWarnings("unused") // keep for debugging

@@ -32,6 +32,7 @@ import org.whispersystems.textsecure.api.messages.TextSecureMessage;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.R;
+import org.whispersystems.whisperpush.WhisperPush;
 import org.whispersystems.whisperpush.attachments.AttachmentManager;
 import org.whispersystems.whisperpush.contacts.Contact;
 import org.whispersystems.whisperpush.contacts.ContactsFactory;
@@ -39,6 +40,7 @@ import org.whispersystems.whisperpush.crypto.IdentityMismatchException;
 import org.whispersystems.whisperpush.database.DatabaseFactory;
 import org.whispersystems.whisperpush.database.WPAxolotlStore;
 import org.whispersystems.whisperpush.db.CMDatabase;
+import org.whispersystems.whisperpush.db.MessageDirectory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
 import org.whispersystems.whisperpush.util.SmsServiceBridge;
@@ -48,8 +50,13 @@ import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.Telephony;
+import android.provider.Telephony.Sms;
+import android.provider.Telephony.TextBasedSmsColumns;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.util.Pair;
 
@@ -58,16 +65,21 @@ import com.google.android.mms.MmsException;
 import com.google.android.mms.pdu.PduPart;
 import com.google.android.mms.pdu.PduPersister;
 
+import static java.lang.String.valueOf;
+import static org.whispersystems.whisperpush.util.Util.extractMessageId;
+
 public class MessageReceiver {
 
     private static final String TAG = MessageReceiver.class.getSimpleName();
 
     private final Context context;
     private final TextSecureMessageReceiver receiver;
+    private final WhisperPush whisperPush;
 
     public MessageReceiver(Context context) {
         this.context = context;
         this.receiver = WhisperServiceFactory.createMessageReceiver(context);
+        this.whisperPush = WhisperPush.getInstance(context);
     }
 
     public void handleNotification() {
@@ -87,24 +99,17 @@ public class MessageReceiver {
     }
 
     public void handleEnvelope(TextSecureEnvelope envelope, boolean sendExplicitReceipt) {
-        if (!isActiveNumber(context, envelope.getSource())) {
-          Directory directory                     = Directory.getInstance(context);
-          ContactTokenDetails contactTokenDetails = new ContactTokenDetails();
-          contactTokenDetails.setNumber(envelope.getSource());
-
-          directory.setNumber(contactTokenDetails, true);
+        String source = envelope.getSource();
+        boolean isActiveNumber = whisperPush.isRecipientSupportsSecureMessaging(source, false);
+        if (!isActiveNumber) {
+            ContactTokenDetails contactTokenDetails = new ContactTokenDetails();
+            contactTokenDetails.setNumber(source);
+            whisperPush.getContactDirectory()
+                    .setNumber(contactTokenDetails, true);
         }
 
         if (envelope.isReceipt()) handleReceipt(envelope);
-        else                      handleMessage(envelope);
-    }
-
-    private boolean isActiveNumber(Context context, String e164number) {
-        try {
-            return Directory.getInstance(context).isActiveNumber(e164number);
-        } catch (NotInDirectoryException e) {
-            return false;
-        }
+        else handleMessage(envelope);
     }
 
     private void handleReceipt(TextSecureEnvelope envelope) {
@@ -151,7 +156,15 @@ public class MessageReceiver {
                             context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
                 }
             } else {
-                SmsServiceBridge.receivedPushTextMessage(context, source, body, timestamp);
+                int subId = -2605;//SubscriptionManager.getDefaultSmsSubId(); //FIXME approve or remove
+                Uri messageUri = SmsServiceBridge.receivedPushTextMessage(context, subId, source, body, timestamp);
+                try {
+                    long messageId = extractMessageId(messageUri);
+                    whisperPush.getMessageDirectory()
+                            .putMessage(messageId, true, MessageDirectory.TYPE_SMS_INCOMING, timestamp);
+                } catch (Exception ex) {
+                    Log.e(TAG, "Can't store message security flag", ex);
+                }
             }
 
             if (StatsUtils.isStatsActive(context)) {
@@ -258,7 +271,7 @@ public class MessageReceiver {
     public interface SecureMessageSaver {
         void saveSecureMessage(String from,
                                String message,
-                               List<Pair<String, String>> attachments);
+                               List<Pair<String, String>> attachments, long sentTimestamp);
     }
 
 }
