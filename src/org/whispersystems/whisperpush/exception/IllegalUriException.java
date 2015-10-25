@@ -1,8 +1,11 @@
 package org.whispersystems.whisperpush.exception;
 
+import android.net.Uri;
+
 public class IllegalUriException extends Exception {
 
-    public IllegalUriException() {
+    public IllegalUriException(Uri uri) {
+        this(uri, null);
     }
 
     public IllegalUriException(String detailMessage) {
@@ -13,8 +16,8 @@ public class IllegalUriException extends Exception {
         super(detailMessage, throwable);
     }
 
-    public IllegalUriException(Throwable throwable) {
-        super(throwable);
+    public IllegalUriException(Uri uri, Throwable throwable) {
+        super(String.valueOf(uri), throwable);
     }
 
 }

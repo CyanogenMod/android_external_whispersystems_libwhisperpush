@@ -162,10 +162,10 @@ public class Util {
             try {
                 return ContentUris.parseId(uri);
             } catch (NumberFormatException ex) {
-                throw  new IllegalUriException(ex);
+                throw  new IllegalUriException(uri, ex);
             }
         } else {
-            throw new IllegalUriException("Unsupported authority");
+            throw new IllegalUriException("Unsupported authority " + authority);
         }
     }
 

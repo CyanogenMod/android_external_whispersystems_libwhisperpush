@@ -26,14 +26,23 @@ import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.db.MessageDirectory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
+import org.whispersystems.whisperpush.exception.IllegalUriException;
 import org.whispersystems.whisperpush.gcm.GcmHelper;
 import org.whispersystems.whisperpush.service.WhisperPushMessageSender;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.Telephony;
 import android.util.Log;
+
+import com.google.android.mms.util.SqliteWrapper;
 
 import static org.whispersystems.whisperpush.util.Util.isEmpty;
 import static org.whispersystems.whisperpush.util.Util.isRunningOnMainThread;
@@ -52,6 +61,7 @@ public class WhisperPush {
     private final WhisperPreferences mPreferences;
     private final Directory mContactDirectory;
     private final MessageDirectory mMessageDirectory;
+    private final ContentResolver mContentResolver;
     private volatile TextSecureAccountManager mTextSecureAccountManager;
     private volatile WhisperPushMessageSender mMessageSender;
 
@@ -73,6 +83,7 @@ public class WhisperPush {
         mPreferences = WhisperPreferences.getInstance(appContext);
         mContactDirectory = Directory.getInstance(appContext);
         mMessageDirectory = MessageDirectory.getInstance(appContext);
+        mContentResolver = appContext.getContentResolver();
         onCreate();
     }
 
@@ -96,6 +107,58 @@ public class WhisperPush {
             }
         }
         return mMessageSender;
+    }
+
+    public int getTelephonyProviderId() {
+        return 26052605; //FIXME
+    }
+
+    public boolean markMessageAsSecurelySent(Uri messageUri) {
+        try {
+            ContentValues values = new ContentValues(2);
+            String authority = messageUri.getAuthority();
+            if ("sms".equals(authority)) {
+                values.put(Telephony.Sms.SUBSCRIPTION_ID, 0);
+                values.put(Telephony.Sms.PROVIDER_ID, getTelephonyProviderId());
+            } else if ("mms".equals(authority)) {
+                values.put(Telephony.Mms.SUBSCRIPTION_ID, 0);
+                values.put(Telephony.Mms.PROVIDER_ID, getTelephonyProviderId());
+            } else {
+                Log.e(TAG, "Can't mark " + messageUri + " as securely sent. Unsupported authority.");
+            }
+            if (mContentResolver.update(messageUri, values, null, null) == 1) {
+                return true;
+            } else {
+                Log.e(TAG, "Can't mark " + messageUri + " as securely sent");
+            }
+        } catch (SQLiteException e) {
+            Log.e(TAG, "Catch a SQLiteException when update: ", e);
+        }
+        return false;
+    }
+
+    private static final String[] PROJECTION_SMS_PROVIDER_ID = {Telephony.Sms.PROVIDER_ID};
+    private static final String[] PROJECTION_MMS_PROVIDER_ID = {Telephony.Mms.PROVIDER_ID};
+
+    public boolean isMessageSecurelySent(Uri messageUri) {
+        String authority = messageUri.getAuthority();
+        String[] projection;
+        if ("sms".equals(authority)) {
+            projection = PROJECTION_SMS_PROVIDER_ID;
+        } else if ("mms".equals(authority)) {
+            projection = PROJECTION_MMS_PROVIDER_ID;
+        } else {
+            return false;
+        }
+        Cursor cursor = mContentResolver.query(messageUri, projection, null, null, null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0) == getTelephonyProviderId();
+            }
+        } finally {
+            cursor.close();
+        }
+        return false;
     }
 
     public Directory getContactDirectory() {

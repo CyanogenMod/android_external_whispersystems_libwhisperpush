@@ -50,12 +50,8 @@ import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
 import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.provider.Telephony;
-import android.provider.Telephony.Sms;
-import android.provider.Telephony.TextBasedSmsColumns;
 import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.util.Pair;
@@ -156,8 +152,9 @@ public class MessageReceiver {
                             context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
                 }
             } else {
-                int subId = -2605;//SubscriptionManager.getDefaultSmsSubId(); //FIXME approve or remove
+                int subId = 0;//SubscriptionManager.getDefaultSmsSubId();
                 Uri messageUri = SmsServiceBridge.receivedPushTextMessage(context, subId, source, body, timestamp);
+                whisperPush.markMessageAsSecurelySent(messageUri);
                 try {
                     long messageId = extractMessageId(messageUri);
                     whisperPush.getMessageDirectory()
