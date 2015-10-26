@@ -121,7 +121,7 @@ public class Directory {
       Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER},
               REGISTERED + " = 1", null, null, null, null);
 
-      if (cursor == null || !cursor.moveToFirst()) {
+      if (!cursor.moveToFirst()) {
           return false;
       }
 
