@@ -111,8 +111,8 @@ public class Directory {
     }
   }
 
-  public boolean isAllActiveNumbers(String[] e164numbers) {
-      if (e164numbers == null || e164numbers.length == 0) {
+  public boolean isAllActiveNumbers(List<String> numbers) {
+      if (numbers == null || numbers.size() == 0) {
           return false;
       }
 
@@ -125,11 +125,11 @@ public class Directory {
           return false;
       }
 
-      for (String e164number : e164numbers) {
-          e164number = e164number.replace(" ", "");
+      for (String number : numbers) {
+          number = number.replace(" ", "");
           cursor.moveToFirst();
           do {
-              if (e164number.equals(cursor.getString(0))) {
+              if (number.equals(cursor.getString(0))) {
                   isAllNumbersActive = true;
                   break;
               } else {
@@ -144,7 +144,6 @@ public class Directory {
           }
       }
       cursor.close();
-
       return isAllNumbersActive;
   }
 
