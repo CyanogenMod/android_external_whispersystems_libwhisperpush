@@ -24,10 +24,8 @@ import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.api.MessagingBridge;
-import org.whispersystems.whisperpush.db.MessageDirectory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
-import org.whispersystems.whisperpush.exception.IllegalUriException;
 import org.whispersystems.whisperpush.gcm.GcmHelper;
 import org.whispersystems.whisperpush.service.WhisperPushMessageSender;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
@@ -42,8 +40,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.Telephony;
 import android.util.Log;
-
-import com.google.android.mms.util.SqliteWrapper;
 
 import static org.whispersystems.whisperpush.util.Util.isEmpty;
 import static org.whispersystems.whisperpush.util.Util.isRunningOnMainThread;
@@ -62,7 +58,6 @@ public class WhisperPush {
     private final Context mContext;
     private final WhisperPreferences mPreferences;
     private final Directory mContactDirectory;
-    private final MessageDirectory mMessageDirectory;
     private final ContentResolver mContentResolver;
     private volatile TextSecureAccountManager mTextSecureAccountManager;
     private volatile WhisperPushMessageSender mMessageSender;
@@ -84,7 +79,6 @@ public class WhisperPush {
         mContext = appContext;
         mPreferences = WhisperPreferences.getInstance(appContext);
         mContactDirectory = Directory.getInstance(appContext);
-        mMessageDirectory = MessageDirectory.getInstance(appContext);
         mContentResolver = appContext.getContentResolver();
         onCreate();
     }
@@ -177,10 +171,6 @@ public class WhisperPush {
 
     public Directory getContactDirectory() {
         return mContactDirectory;
-    }
-
-    public MessageDirectory getMessageDirectory() {
-        return mMessageDirectory;
     }
 
     public String getLocalNumber() {

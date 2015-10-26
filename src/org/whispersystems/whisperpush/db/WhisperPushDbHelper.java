@@ -5,7 +5,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import org.whispersystems.whisperpush.db.table.ContactDirectoryTable;
-import org.whispersystems.whisperpush.db.table.MessageDirectoryTable;
 
 public class WhisperPushDbHelper extends SQLiteOpenHelper {
 
@@ -32,7 +31,6 @@ public class WhisperPushDbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(ContactDirectoryTable.CREATE_TABLE);
-        db.execSQL(MessageDirectoryTable.CREATE_TABLE);
     }
 
     @Override

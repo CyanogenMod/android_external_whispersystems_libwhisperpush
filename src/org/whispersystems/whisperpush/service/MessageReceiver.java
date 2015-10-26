@@ -40,7 +40,6 @@ import org.whispersystems.whisperpush.crypto.IdentityMismatchException;
 import org.whispersystems.whisperpush.database.DatabaseFactory;
 import org.whispersystems.whisperpush.database.WPAxolotlStore;
 import org.whispersystems.whisperpush.db.CMDatabase;
-import org.whispersystems.whisperpush.db.MessageDirectory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
 import org.whispersystems.whisperpush.util.StatsUtils;
@@ -153,13 +152,6 @@ public class MessageReceiver {
                 Uri messageUri = whisperPush.getMessagingBridge()
                         .storeIncomingTextMessage(0, source, body.get(), timestamp, false, true);
                 whisperPush.markMessageAsSecurelySent(messageUri);
-                try {
-                    long messageId = extractMessageId(messageUri);
-                    whisperPush.getMessageDirectory()
-                            .putMessage(messageId, true, MessageDirectory.TYPE_SMS_INCOMING, timestamp);
-                } catch (Exception ex) {
-                    Log.e(TAG, "Can't store message security flag", ex);
-                }
             }
 
             if (StatsUtils.isStatsActive(context)) {
