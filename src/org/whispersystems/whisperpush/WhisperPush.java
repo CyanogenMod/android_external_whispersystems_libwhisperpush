@@ -23,6 +23,7 @@ import org.whispersystems.textsecure.api.TextSecureAccountManager;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
+import org.whispersystems.whisperpush.api.MessagingBridge;
 import org.whispersystems.whisperpush.db.MessageDirectory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
@@ -56,6 +57,7 @@ public class WhisperPush {
     private static final long UPDATE_INTERVAL = 7L * MILLIS_PER_DAY;
 
     private static volatile WhisperPush mInstance;
+    private static volatile MessagingBridge mMessagingBridge;
 
     private final Context mContext;
     private final WhisperPreferences mPreferences;
@@ -85,6 +87,18 @@ public class WhisperPush {
         mMessageDirectory = MessageDirectory.getInstance(appContext);
         mContentResolver = appContext.getContentResolver();
         onCreate();
+    }
+
+    public MessagingBridge getMessagingBridge() {
+        MessagingBridge messagingBridge = mMessagingBridge;
+        if (messagingBridge == null) {
+            throw new IllegalStateException("Messaging Bridge is not set");
+        }
+        return messagingBridge;
+    }
+
+    public static void setMessagingBridge(MessagingBridge bridge) {
+        mMessagingBridge = bridge;
     }
 
     private TextSecureAccountManager getTextSecureAccountManager() {

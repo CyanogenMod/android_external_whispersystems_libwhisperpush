@@ -43,7 +43,6 @@ import org.whispersystems.whisperpush.db.CMDatabase;
 import org.whispersystems.whisperpush.db.MessageDirectory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
-import org.whispersystems.whisperpush.util.SmsServiceBridge;
 import org.whispersystems.whisperpush.util.StatsUtils;
 import org.whispersystems.whisperpush.util.Util;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
@@ -52,7 +51,6 @@ import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 import android.content.Context;
 import android.net.Uri;
 import android.provider.Telephony;
-import android.telephony.SubscriptionManager;
 import android.util.Log;
 import android.util.Pair;
 
@@ -143,8 +141,8 @@ public class MessageReceiver {
             if (attach.isPresent()) {
                 try {
                     attachments = retrieveAttachments(source, attach.get());
-                    SmsServiceBridge.receivedPushMultimediaMessage(context, source, body,
-                            attachments, timestamp);
+                    whisperPush.getMessagingBridge()
+                            .storeIncomingSecureMultimediaMessage(source, body.get(), attachments, timestamp, true);
                 } catch (IOException e) {
                     Log.w(TAG, e);
                     Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
@@ -152,8 +150,8 @@ public class MessageReceiver {
                             context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
                 }
             } else {
-                int subId = 0;//SubscriptionManager.getDefaultSmsSubId();
-                Uri messageUri = SmsServiceBridge.receivedPushTextMessage(context, subId, source, body, timestamp);
+                Uri messageUri = whisperPush.getMessagingBridge()
+                        .storeIncomingTextMessage(0, source, body.get(), timestamp, false, true);
                 whisperPush.markMessageAsSecurelySent(messageUri);
                 try {
                     long messageId = extractMessageId(messageUri);
