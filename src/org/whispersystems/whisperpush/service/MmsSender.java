@@ -23,6 +23,7 @@ import android.util.Log;
 import com.google.android.mms.ContentType;
 import com.google.android.mms.MmsException;
 import com.google.android.mms.pdu.CharacterSets;
+import com.google.android.mms.pdu.EncodedStringValue;
 import com.google.android.mms.pdu.PduBody;
 import com.google.android.mms.pdu.SendReq;
 
@@ -31,6 +32,7 @@ import org.whispersystems.textsecure.api.crypto.UntrustedIdentityException;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachment;
 import org.whispersystems.textsecure.api.messages.TextSecureMessage;
 import org.whispersystems.textsecure.api.push.TextSecureAddress;
+import org.whispersystems.textsecure.api.push.exceptions.EncapsulatedExceptions;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.util.Util;
@@ -39,6 +41,7 @@ import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MmsSender {
@@ -53,26 +56,36 @@ public class MmsSender {
     public void send(SendReq message, List<TextSecureAttachment> attachments)
             throws MmsException, UntrustedIdentityException {
         TextSecureMessageSender messageSender = WhisperServiceFactory.createMessageSender(mContext);
-        String destination = message.getTo()[0].getString();
+        EncodedStringValue[] destinations = message.getTo();
+        List<TextSecureAddress> recipients = new ArrayList<>(destinations.length);
+
+        String localNumber = WhisperPreferences.getLocalNumber(mContext);
+        for (EncodedStringValue destination : destinations) {
+            String e164number;
+            try {
+                e164number = PhoneNumberFormatter.formatNumber(destination.toString(), localNumber);
+            } catch (InvalidNumberException e) {
+                Log.w(TAG, e);
+                throw new MmsException(e);
+            }
+            recipients.add(new TextSecureAddress(e164number));
+        }
 
         try {
-            String localNumber = WhisperPreferences.getLocalNumber(mContext);
-            String e164number = PhoneNumberFormatter.formatNumber(destination, localNumber);
-            TextSecureAddress address = new TextSecureAddress(e164number);
             String body = getMessageText(message.getBody());
 
-            messageSender.sendMessage(address,
+            messageSender.sendMessage(recipients,
                     TextSecureMessage.newBuilder()
                             .withBody(body)
                             .withAttachments(attachments)
                             .build());
 
-        } catch (InvalidNumberException e) {
-            Log.w(TAG, e);
-            throw new MmsException(e);
         } catch (IOException e) {
             Log.w(TAG, e);
             throw new MmsException(e);
+        } catch (EncapsulatedExceptions eex) {
+            Log.w(TAG, eex);
+            throw new MmsException(eex);
         }
     }
 
