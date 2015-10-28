@@ -45,9 +45,9 @@ import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TIME
 
 public class Directory {
 
-  public static final int ALL_CONTACTS_SECURE = 1;
-  public static final int ALL_CONTACTS_UNSECURE = 2;
-  public static final int CONTACTS_MIXED = 3;
+  public static final int STATE_ALL_CONTACTS_SECURE = 1;
+  public static final int STATE_ALL_CONTACTS_UNSECURE = 2;
+  public static final int STATE_CONTACTS_MIXED = 3;
 
   private static final Object instanceLock = new Object();
   private static volatile Directory instance;
@@ -118,7 +118,7 @@ public class Directory {
 
   public int isAllActiveNumbers(Collection<String> numbers) {
       if (Util.isEmpty(numbers)) {
-          return ALL_CONTACTS_UNSECURE;
+          return STATE_ALL_CONTACTS_UNSECURE;
       }
 
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
@@ -127,7 +127,7 @@ public class Directory {
       List<Boolean> numbersSecurityStates = new ArrayList<>();
 
       if (!cursor.moveToFirst()) {
-          return ALL_CONTACTS_UNSECURE;
+          return STATE_ALL_CONTACTS_UNSECURE;
       }
 
       for (String number : numbers) {
@@ -147,11 +147,11 @@ public class Directory {
       cursor.close();
 
       if (numbersSecurityStates.contains(true) && numbersSecurityStates.contains(false)) {
-          return CONTACTS_MIXED;
+          return STATE_CONTACTS_MIXED;
       } else if (numbersSecurityStates.contains(true)) {
-          return ALL_CONTACTS_SECURE;
+          return STATE_ALL_CONTACTS_SECURE;
       } else {
-          return ALL_CONTACTS_UNSECURE;
+          return STATE_ALL_CONTACTS_UNSECURE;
       }
   }
 
