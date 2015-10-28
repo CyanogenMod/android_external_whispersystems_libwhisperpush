@@ -28,6 +28,7 @@ import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
+import org.whispersystems.whisperpush.util.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,6 +44,10 @@ import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TABL
 import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TIMESTAMP;
 
 public class Directory {
+
+  public static final int ALL_CONTACTS_SECURE = 1;
+  public static final int ALL_CONTACTS_UNSECURE = 2;
+  public static final int CONTACTS_MIXED = 3;
 
   private static final Object instanceLock = new Object();
   private static volatile Directory instance;
@@ -111,40 +116,43 @@ public class Directory {
     }
   }
 
-  public boolean isAllActiveNumbers(List<String> numbers) {
-      if (numbers == null || numbers.size() == 0) {
-          return false;
+  public int isAllActiveNumbers(Collection<String> numbers) {
+      if (Util.isEmpty(numbers)) {
+          return ALL_CONTACTS_UNSECURE;
       }
 
-      boolean isAllNumbersActive = false;
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
       Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER},
               REGISTERED + " = 1", null, null, null, null);
+      List<Boolean> numbersSecurityStates = new ArrayList<>();
 
       if (!cursor.moveToFirst()) {
-          return false;
+          return ALL_CONTACTS_UNSECURE;
       }
 
       for (String number : numbers) {
+          boolean isNumberActive = false;
           number = number.replace(" ", "");
           cursor.moveToFirst();
           do {
               if (number.equals(cursor.getString(0))) {
-                  isAllNumbersActive = true;
+                  isNumberActive = true;
                   break;
-              } else {
-                  isAllNumbersActive = false;
               }
           } while (cursor.moveToNext());
 
-          // if at least one number is not active, break and return false
-          if (!isAllNumbersActive) {
-              cursor.close();
-              return false;
-          }
+        numbersSecurityStates.add(isNumberActive);
       }
+
       cursor.close();
-      return isAllNumbersActive;
+
+      if (numbersSecurityStates.contains(true) && numbersSecurityStates.contains(false)) {
+          return CONTACTS_MIXED;
+      } else if (numbersSecurityStates.contains(true)) {
+          return ALL_CONTACTS_SECURE;
+      } else {
+          return ALL_CONTACTS_UNSECURE;
+      }
   }
 
   public void setActiveNumberAndRelay(String e164number, String relay) {
