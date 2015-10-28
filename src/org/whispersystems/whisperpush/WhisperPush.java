@@ -52,6 +52,9 @@ public class WhisperPush {
     private static final long MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR;
     private static final long UPDATE_INTERVAL = 7L * MILLIS_PER_DAY;
 
+    public static final String UNREGISTER_ACTION =
+            "org.whispersystems.whisperpush.action.WHISPERPUSH_UNREGISTERED";
+
     private static volatile WhisperPush mInstance;
     private static volatile MessagingBridge mMessagingBridge;
 
