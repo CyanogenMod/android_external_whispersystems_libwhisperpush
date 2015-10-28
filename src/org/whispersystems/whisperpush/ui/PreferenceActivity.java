@@ -112,8 +112,15 @@ public class PreferenceActivity extends Activity {
         private Preference mRegisterPreference;
         private Preference mUnregisterPreference;
         private Preference mMyIdentityPreference;
+        private Context mApplicationContext;
 
         public WhisperPushPreferenceFragment() {
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            mApplicationContext = getActivity().getApplicationContext();
         }
 
         @Override
@@ -206,14 +213,15 @@ public class PreferenceActivity extends Activity {
         }
 
         private void onWhisperPushUnregisterFinished(boolean result) {
+            Context context = getActivity() != null ? getActivity() : mApplicationContext;
             if(result) {
-                MessageNotifier.notifyUnRegistered(getActivity());
+                MessageNotifier.notifyUnRegistered(context);
             }
             mProgressDialog.dismiss();
             setupPreferences();
 
             Intent intent = new Intent(WhisperPush.UNREGISTER_ACTION);
-            getActivity().sendBroadcast(intent);
+            context.sendBroadcast(intent);
         }
     }
 

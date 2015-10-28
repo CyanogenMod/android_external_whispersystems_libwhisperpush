@@ -18,6 +18,7 @@ package org.whispersystems.whisperpush.service;
 
 import java.util.Date;
 
+import android.app.Activity;
 import org.whispersystems.libaxolotl.InvalidMessageException;
 import org.whispersystems.libaxolotl.InvalidVersionException;
 import org.whispersystems.libaxolotl.protocol.PreKeyWhisperMessage;
@@ -64,12 +65,18 @@ public class MessageNotifier {
     }
 
     public static void notifyUnRegistered(Context context) {
+
+        Intent preferenceActivityIntent = new Intent(context, PreferenceActivity.class);
+        if (!(context instanceof Activity)) {
+            preferenceActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+
         Notification notification = new Notification.BigTextStyle(
                 new Notification.Builder(context)
                         .setSmallIcon(R.drawable.ic_notify)
                         .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
                                 R.drawable.ic_notify))
-                        .setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, PreferenceActivity.class), 0))
+                        .setContentIntent(PendingIntent.getActivity(context, 0, preferenceActivityIntent, 0))
                         .setContentTitle(context.getString(R.string.MessageNotifier_user_unregistered_from_service_title))
                         .setContentText(context.getString(R.string.MessageNotifier_user_unregistered_from_service_content))
         ).bigText(context.getString(R.string.MessageNotifier_user_unregistered_from_service_content)).build();
