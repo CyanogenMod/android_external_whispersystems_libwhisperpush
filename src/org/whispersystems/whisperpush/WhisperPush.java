@@ -120,8 +120,15 @@ public class WhisperPush {
         return mMessageSender;
     }
 
-    public int getTelephonyProviderId() {
-        return 26052605; //FIXME
+    private String getProviderId() {
+        return "com.cyngn.whisperpush.text-secure";
+    }
+
+    public boolean isProviderSecure(String providerId) {
+        if (providerId == null) {
+            return false;
+        }
+        return providerId.equals(getProviderId());
     }
 
     public boolean markMessageAsSecurelySent(Uri messageUri) {
@@ -130,10 +137,10 @@ public class WhisperPush {
             String authority = messageUri.getAuthority();
             if ("sms".equals(authority)) {
                 values.put(Telephony.Sms.SUBSCRIPTION_ID, 0);
-                values.put(Telephony.Sms.PROVIDER_ID, getTelephonyProviderId());
+                values.put(Telephony.Sms.PROVIDER_ID, getProviderId());
             } else if ("mms".equals(authority)) {
                 values.put(Telephony.Mms.SUBSCRIPTION_ID, 0);
-                values.put(Telephony.Mms.PROVIDER_ID, getTelephonyProviderId());
+                values.put(Telephony.Mms.PROVIDER_ID, getProviderId());
             } else {
                 Log.e(TAG, "Can't mark " + messageUri + " as securely sent. Unsupported authority.");
             }
@@ -164,7 +171,7 @@ public class WhisperPush {
         Cursor cursor = mContentResolver.query(messageUri, projection, null, null, null);
         try {
             if (cursor.moveToFirst()) {
-                return cursor.getInt(0) == getTelephonyProviderId();
+                return isProviderSecure(cursor.getString(0));
             }
         } finally {
             cursor.close();
