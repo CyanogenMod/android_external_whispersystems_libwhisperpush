@@ -38,7 +38,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.provider.Telephony;
+import android.provider.Telephony.Mms;
+import android.provider.Telephony.Sms;
 import android.util.Log;
 
 import static org.whispersystems.whisperpush.util.Util.isEmpty;
@@ -47,6 +48,8 @@ import static org.whispersystems.whisperpush.util.Util.isRunningOnMainThread;
 public class WhisperPush {
 
     private static final String TAG = WhisperPush.class.getSimpleName();
+
+    private static final String PROVIDER_TEXT_SECURE = "org.whispersystems.textsecure";
 
     private static final long MILLIS_PER_HOUR = 60L * 60L * 1000L;
     private static final long MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR;
@@ -120,15 +123,11 @@ public class WhisperPush {
         return mMessageSender;
     }
 
-    private String getProviderId() {
-        return "com.cyngn.whisperpush.text-secure";
-    }
-
     public boolean isProviderSecure(String providerId) {
         if (providerId == null) {
             return false;
         }
-        return providerId.equals(getProviderId());
+        return providerId.equals(PROVIDER_TEXT_SECURE);
     }
 
     public boolean markMessageAsSecurelySent(Uri messageUri) {
@@ -136,11 +135,11 @@ public class WhisperPush {
             ContentValues values = new ContentValues(2);
             String authority = messageUri.getAuthority();
             if ("sms".equals(authority)) {
-                values.put(Telephony.Sms.SUBSCRIPTION_ID, 0);
-                values.put(Telephony.Sms.PROVIDER_ID, getProviderId());
+                values.put(Sms.SUBSCRIPTION_ID, 0);
+                values.put(Sms.PROVIDER_ID, PROVIDER_TEXT_SECURE);
             } else if ("mms".equals(authority)) {
-                values.put(Telephony.Mms.SUBSCRIPTION_ID, 0);
-                values.put(Telephony.Mms.PROVIDER_ID, getProviderId());
+                values.put(Mms.SUBSCRIPTION_ID, 0);
+                values.put(Mms.PROVIDER_ID, PROVIDER_TEXT_SECURE);
             } else {
                 Log.e(TAG, "Can't mark " + messageUri + " as securely sent. Unsupported authority.");
             }
@@ -155,8 +154,8 @@ public class WhisperPush {
         return false;
     }
 
-    private static final String[] PROJECTION_SMS_PROVIDER_ID = {Telephony.Sms.PROVIDER_ID};
-    private static final String[] PROJECTION_MMS_PROVIDER_ID = {Telephony.Mms.PROVIDER_ID};
+    private static final String[] PROJECTION_SMS_PROVIDER_ID = {Sms.PROVIDER_ID};
+    private static final String[] PROJECTION_MMS_PROVIDER_ID = {Mms.PROVIDER_ID};
 
     public boolean isMessageSecurelySent(Uri messageUri) {
         String authority = messageUri.getAuthority();
@@ -265,14 +264,17 @@ public class WhisperPush {
         }.execute();
     }
 
+    @Deprecated
     public static void activityResumed() {
         visible = true;
     }
 
+    @Deprecated
     public static void activityPaused() {
         visible = false;
     }
 
+    @Deprecated
     public static boolean isActivityVisible() {
         return visible;
     }
