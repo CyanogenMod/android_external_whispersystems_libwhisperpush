@@ -63,7 +63,7 @@ public class MmsSender {
         for (EncodedStringValue destination : destinations) {
             String e164number;
             try {
-                e164number = PhoneNumberFormatter.formatNumber(destination.toString(), localNumber);
+                e164number = PhoneNumberFormatter.formatNumber(destination.getString(), localNumber);
             } catch (InvalidNumberException e) {
                 Log.w(TAG, e);
                 throw new MmsException(e);
