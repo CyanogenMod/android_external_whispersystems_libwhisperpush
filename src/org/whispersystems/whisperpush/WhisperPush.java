@@ -241,12 +241,15 @@ public class WhisperPush {
         }
     }
 
-    private static void launchGcmRegistration(final Context context) {
+    private void launchGcmRegistration(final Context context) {
         new AsyncTask<Void, Void, Boolean>() {
             @Override
             protected Boolean doInBackground(Void... params) {
                 try {
-                    GcmHelper.getRegistrationId(context);
+                    String registrationId = GcmHelper.getRegistrationId(context);
+                    if (registrationId != null) {
+                        getTextSecureAccountManager().setGcmId(Optional.of(registrationId));
+                    }
                     WhisperPreferences.setGcmRegistrationTime(context, System.currentTimeMillis());
                     return true;
                 } catch (IOException e) {
