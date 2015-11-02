@@ -36,6 +36,7 @@ import org.whispersystems.textsecure.api.push.TextSecureAddress;
 import org.whispersystems.textsecure.api.push.exceptions.EncapsulatedExceptions;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
+import org.whispersystems.whisperpush.WhisperPush;
 import org.whispersystems.whisperpush.util.Util;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
@@ -50,9 +51,11 @@ public class MmsSender {
     private static final String TAG = MmsSender.class.getSimpleName();
 
     private final Context mContext;
+    private final WhisperPush mWhisperPush;
 
     public MmsSender(Context context) {
         this.mContext = context;
+        this.mWhisperPush = WhisperPush.getInstance(context);
     }
 
     public void sendMessage(SendReq message, List<TextSecureAttachment> attachments)
@@ -81,6 +84,10 @@ public class MmsSender {
             } catch (InvalidNumberException e) {
                 Log.w(TAG, e);
                 throw new MmsException(e);
+            }
+            boolean recipientSupportsSecureMessaging = mWhisperPush.isRecipientSupportsSecureMessaging(e164number, true);
+            if (!recipientSupportsSecureMessaging) {
+                throw new MmsException("Recipient " + e164number + " doesn't support secure messaging");
             }
             recipients.add(new TextSecureAddress(e164number));
         }
