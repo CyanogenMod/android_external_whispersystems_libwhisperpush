@@ -49,7 +49,8 @@ public class WhisperPush {
 
     private static final String TAG = WhisperPush.class.getSimpleName();
 
-    private static final String PROVIDER_TEXT_SECURE = "org.whispersystems.textsecure";
+    public static final String PROVIDER_DEFAULT = "default";
+    public static final String PROVIDER_TEXT_SECURE = "org.whispersystems.textsecure";
 
     private static final long MILLIS_PER_HOUR = 60L * 60L * 1000L;
     private static final long MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR;
