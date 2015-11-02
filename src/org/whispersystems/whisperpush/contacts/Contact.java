@@ -30,7 +30,7 @@ import org.whispersystems.whisperpush.util.ListenableFutureTask;
 
 public class Contact implements Parcelable {
 
-    public static final Parcelable.Creator<Contact> CREATOR = new Parcelable.Creator<Contact>() {
+    public static final Creator<Contact> CREATOR = new Creator<Contact>() {
         public Contact createFromParcel(Parcel in) {
             return new Contact(in);
         }

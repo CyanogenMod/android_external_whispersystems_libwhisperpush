@@ -43,7 +43,7 @@ public class MasterSecret implements Parcelable {
   private final SecretKeySpec encryptionKey;
   private final SecretKeySpec macKey;
 
-  public static final Parcelable.Creator<MasterSecret> CREATOR = new Parcelable.Creator<MasterSecret>() {
+  public static final Creator<MasterSecret> CREATOR = new Creator<MasterSecret>() {
     @Override
     public MasterSecret createFromParcel(Parcel in) {
       return new MasterSecret(in);

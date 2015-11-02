@@ -18,8 +18,11 @@ package org.whispersystems.whisperpush.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.whispersystems.libaxolotl.InvalidMessageException;
 import org.whispersystems.libaxolotl.util.guava.Optional;
@@ -28,11 +31,13 @@ import org.whispersystems.textsecure.api.crypto.TextSecureCipher;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachment;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachmentPointer;
 import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
+import org.whispersystems.textsecure.api.messages.TextSecureGroup;
 import org.whispersystems.textsecure.api.messages.TextSecureMessage;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.R;
 import org.whispersystems.whisperpush.WhisperPush;
+import org.whispersystems.whisperpush.api.MessagingBridge;
 import org.whispersystems.whisperpush.attachments.AttachmentManager;
 import org.whispersystems.whisperpush.contacts.Contact;
 import org.whispersystems.whisperpush.contacts.ContactsFactory;
@@ -57,9 +62,6 @@ import com.android.internal.telephony.util.BlacklistUtils;
 import com.google.android.mms.MmsException;
 import com.google.android.mms.pdu.PduPart;
 import com.google.android.mms.pdu.PduPersister;
-
-import static java.lang.String.valueOf;
-import static org.whispersystems.whisperpush.util.Util.extractMessageId;
 
 public class MessageReceiver {
 
@@ -130,27 +132,27 @@ public class MessageReceiver {
         }
         updateDirectoryIfNecessary(message);
 
+        MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
+
         try {
             TextSecureMessage content = getPlaintext(message);
-            Optional<String> body = content.getBody();
+
+            Optional<TextSecureGroup> textSecureGroupOptional = content.getGroupInfo();
             long timestamp = message.getTimestamp();
-            List<Pair<String, String>> attachments;
+
             Optional<List<TextSecureAttachment>> attach = content.getAttachments();
 
-            if (attach.isPresent()) {
-                try {
-                    attachments = retrieveAttachments(source, attach.get());
-                    whisperPush.getMessagingBridge()
-                            .storeIncomingSecureMultimediaMessage(source, body.get(), attachments, timestamp, true);
-                } catch (IOException e) {
-                    Log.w(TAG, e);
-                    Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
-                    MessageNotifier.notifyProblem(context, contact,
-                            context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
-                }
+            Optional<String> body = content.getBody();
+            String textBody = body.isPresent() ? body.get() : "";
+
+            if (textSecureGroupOptional.isPresent()) {
+                handleGroupMessage(textSecureGroupOptional, messagingBridge,
+                        source, attach, textBody, timestamp);
+            } else if (attach.isPresent()) {
+                handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
             } else {
-                Uri messageUri = whisperPush.getMessagingBridge()
-                        .storeIncomingTextMessage(0, source, body.get(), timestamp, false, true);
+                Uri messageUri = messagingBridge
+                        .storeIncomingTextMessage(0, source, textBody, timestamp, false, true);
                 whisperPush.markMessageAsSecurelySent(messageUri);
             }
 
@@ -166,6 +168,59 @@ public class MessageReceiver {
             Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
             MessageNotifier.notifyProblem(context, contact,
                     context.getString(R.string.MessageReceiver_received_badly_encrypted_message));
+        }
+    }
+
+    private void handleGroupMessage(Optional<TextSecureGroup> textSecureGroupOptional,
+                                    MessagingBridge messagingBridge, String source,
+                                    Optional<List<TextSecureAttachment>> attach,
+                                    String textBody, long timestamp)
+            throws InvalidMessageException {
+        TextSecureGroup textSecureGroup = textSecureGroupOptional.get();
+        byte[] groupId = textSecureGroup.getGroupId();
+        TextSecureGroup.Type type = textSecureGroup.getType();
+
+        if (type == TextSecureGroup.Type.UPDATE) {
+            Set<String> members = new HashSet<>();
+            if (textSecureGroup.getMembers().isPresent()) {
+                members.addAll(textSecureGroup.getMembers().get());
+            }
+            members.remove(WhisperPush.getInstance(context).getLocalNumber());
+            members.add(source);
+            messagingBridge.updateMessageGroup(textSecureGroup.getGroupId(), members);
+        } else if (type == TextSecureGroup.Type.DELIVER) {
+            try {
+                long threadId = messagingBridge.getThreadId(groupId);
+                List<Pair<String, String>> attachments;
+                if (attach.isPresent()) {
+                    attachments = retrieveAttachments(threadId, attach.get());
+                } else {
+                    attachments = Collections.EMPTY_LIST;
+                }
+                messagingBridge.storeIncomingGroupMessage(
+                        source, textBody, attachments, timestamp, true, threadId);
+            } catch (IOException e) {
+                Log.w(TAG, e);
+                Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
+                MessageNotifier.notifyProblem(context, contact,
+                        context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
+            }
+        }
+    }
+
+    private void handleMultimediaMessage(MessagingBridge messagingBridge, String source,
+                                         Optional<List<TextSecureAttachment>> attach,
+                                         String textBody, long timestamp)
+            throws InvalidMessageException {
+        try {
+            long threadId = Telephony.Threads.getOrCreateThreadId(context, source);
+            List<Pair<String, String>> attachments = retrieveAttachments(threadId, attach.get());
+            messagingBridge.storeIncomingMultimediaMessage(source, textBody, attachments, timestamp, true);
+        } catch (IOException e) {
+            Log.w(TAG, e);
+            Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
+            MessageNotifier.notifyProblem(context, contact,
+                    context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
         }
     }
 
@@ -186,13 +241,12 @@ public class MessageReceiver {
         }
     }
 
-    private List<Pair<String, String>> retrieveAttachments(String from, List<TextSecureAttachment> list)
+    private List<Pair<String, String>> retrieveAttachments(long threadId, List<TextSecureAttachment> list)
             throws IOException, InvalidMessageException
     {
         AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
         List<Pair<String, String>> results = new LinkedList<Pair<String, String>>();
 
-        long threadId = Telephony.Threads.getOrCreateThreadId(context, from);
         for (TextSecureAttachment attachment : list) {
             InputStream stream = null;
             byte[] attachmentBytes;
@@ -226,9 +280,10 @@ public class MessageReceiver {
     }
 
     private void updateDirectoryIfNecessary(TextSecureEnvelope message) {
-        if (!isActiveNumber(message.getSource())) {
+        String source = message.getSource();
+        if (!isActiveNumber(source)) {
             Directory           directory           = Directory.getInstance(context);
-            directory.setActiveNumberAndRelay(message.getSource(), message.getRelay());
+            directory.setActiveNumberAndRelay(source, message.getRelay());
         }
     }
 
@@ -253,12 +308,6 @@ public class MessageReceiver {
         String formatted = PhoneNumberFormatter.formatE164(local, number);
         int type = BlacklistUtils.isListed(context, formatted, BlacklistUtils.BLOCK_MESSAGES);
         return type != BlacklistUtils.MATCH_NONE;
-    }
-
-    public interface SecureMessageSaver {
-        void saveSecureMessage(String from,
-                               String message,
-                               List<Pair<String, String>> attachments, long sentTimestamp);
     }
 
 }
