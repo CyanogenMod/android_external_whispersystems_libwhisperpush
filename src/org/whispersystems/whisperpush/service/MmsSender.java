@@ -18,7 +18,6 @@
 package org.whispersystems.whisperpush.service;
 
 import android.content.Context;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.mms.ContentType;
@@ -45,9 +44,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class MmsSender {
     private static final String TAG = MmsSender.class.getSimpleName();
@@ -58,44 +55,20 @@ public class MmsSender {
         this.mContext = context;
     }
 
-    public void send(SendReq message, List<TextSecureAttachment> attachments)
+    public void sendMessage(SendReq message, List<TextSecureAttachment> attachments)
             throws MmsException, UntrustedIdentityException {
-        TextSecureMessageSender messageSender = WhisperServiceFactory.createMessageSender(mContext);
-        EncodedStringValue[] destinations = message.getTo();
-        List<TextSecureAddress> recipients = new ArrayList<>(destinations.length);
-
-        String localNumber = WhisperPreferences.getLocalNumber(mContext);
-        for (EncodedStringValue destination : destinations) {
-            String e164number;
-            try {
-                e164number = PhoneNumberFormatter.formatNumber(destination.getString(), localNumber);
-            } catch (InvalidNumberException e) {
-                Log.w(TAG, e);
-                throw new MmsException(e);
-            }
-            recipients.add(new TextSecureAddress(e164number));
-        }
-
-        try {
-            String body = getMessageText(message.getBody());
-
-            messageSender.sendMessage(recipients,
-                    TextSecureMessage.newBuilder()
-                            .withBody(body)
-                            .withAttachments(attachments)
-                            .build());
-
-        } catch (IOException e) {
-            Log.w(TAG, e);
-            throw new MmsException(e);
-        } catch (EncapsulatedExceptions eex) {
-            Log.w(TAG, eex);
-            throw new MmsException(eex);
-        }
+        send(message, attachments, null);
     }
 
     public void sendGroupMessage(SendReq message, List<TextSecureAttachment> attachments, byte[] id)
             throws MmsException, UntrustedIdentityException {
+        TextSecureGroup textSecureGroup = new TextSecureGroup(TextSecureGroup.Type.DELIVER,
+                id, null, null, null);
+        send(message, attachments, textSecureGroup);
+    }
+
+    private void send(SendReq message, List<TextSecureAttachment> attachments, TextSecureGroup textSecureGroup)
+            throws MmsException, UntrustedIdentityException {
         TextSecureMessageSender messageSender = WhisperServiceFactory.createMessageSender(mContext);
         EncodedStringValue[] destinations = message.getTo();
         List<TextSecureAddress> recipients = new ArrayList<>(destinations.length);
@@ -114,16 +87,14 @@ public class MmsSender {
 
         try {
             String body = getMessageText(message.getBody());
-            TextSecureGroup textSecureGroup = new TextSecureGroup(TextSecureGroup.Type.DELIVER,
-                        id, null, null, null);
+            TextSecureMessage.Builder builder = TextSecureMessage.newBuilder()
+                    .withBody(body)
+                    .withAttachments(attachments);
+            if (textSecureGroup != null) {
+                builder.asGroupMessage(textSecureGroup);
+            }
 
-            messageSender.sendMessage(recipients,
-                    TextSecureMessage.newBuilder()
-                            .withBody(body)
-                            .withAttachments(attachments)
-                            .asGroupMessage(textSecureGroup)
-                            .build());
-
+            messageSender.sendMessage(recipients, builder.build());
         } catch (IOException e) {
             Log.w(TAG, e);
             throw new MmsException(e);
@@ -131,6 +102,7 @@ public class MmsSender {
             Log.w(TAG, eex);
             throw new MmsException(eex);
         }
+
     }
 
     public void sendGroupUpdate(byte[] id, Collection<String> members)
@@ -153,7 +125,7 @@ public class MmsSender {
 
         try {
             TextSecureGroup textSecureGroup = new TextSecureGroup(TextSecureGroup.Type.UPDATE,
-                        id, null, new ArrayList<>(members), null);
+                    id, null, new ArrayList<>(members), null);
 
             messageSender.sendMessage(recipients,
                     TextSecureMessage.newBuilder()
