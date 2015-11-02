@@ -20,6 +20,8 @@ public interface MessagingBridge {
 
     void updateMessageGroup(byte[] groupId, Collection<String> members);
 
+    void quitUserFromMessageGroup(byte[] groupId, String member);
+
     long getThreadId(byte[] groupId);
 
 }

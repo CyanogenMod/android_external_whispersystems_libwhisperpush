@@ -205,6 +205,8 @@ public class MessageReceiver {
                 MessageNotifier.notifyProblem(context, contact,
                         context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
             }
+        } else if (type == TextSecureGroup.Type.QUIT) {
+            messagingBridge.quitUserFromMessageGroup(groupId, source);
         }
     }
 
