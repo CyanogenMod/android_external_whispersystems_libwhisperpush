@@ -44,6 +44,7 @@ import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -74,10 +75,16 @@ public class MmsSender {
             throws MmsException, UntrustedIdentityException {
         TextSecureMessageSender messageSender = WhisperServiceFactory.createMessageSender(mContext);
         EncodedStringValue[] destinations = message.getTo();
+        EncodedStringValue[] values = message.getBcc();
+        List<EncodedStringValue> sentDestinations = values != null ? Arrays.asList(values) : null;
         List<TextSecureAddress> recipients = new ArrayList<>(destinations.length);
 
         String localNumber = WhisperPreferences.getLocalNumber(mContext);
         for (EncodedStringValue destination : destinations) {
+            if (sentDestinations != null && sentDestinations.contains(destination)) {
+                continue;
+            }
+
             String e164number;
             try {
                 e164number = PhoneNumberFormatter.formatNumber(destination.getString(), localNumber);
