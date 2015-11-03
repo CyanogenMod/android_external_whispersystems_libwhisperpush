@@ -23,12 +23,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.util.Log;
+import android.text.TextUtils;
 
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
 import org.whispersystems.whisperpush.util.Util;
+import org.whispersystems.whisperpush.WhisperPush;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,6 +51,7 @@ public class Directory {
   public static final int STATE_ALL_CONTACTS_UNSECURE = 2;
   public static final int STATE_CONTACTS_MIXED = 3;
 
+  private static final String TAG = Directory.class.getSimpleName();
   private static final Object instanceLock = new Object();
   private static volatile Directory instance;
 
@@ -120,38 +123,28 @@ public class Directory {
       if (Util.isEmpty(numbers)) {
           return STATE_ALL_CONTACTS_UNSECURE;
       }
+      List<String> formattedNumbers = new ArrayList<String>();
+      WhisperPush whisperPush = WhisperPush.getInstance(context);
+
+      for (String number : numbers) {
+          try {
+              String formattedNumber = whisperPush.formatNumber(number);
+              formattedNumbers.add(formattedNumber);
+          } catch (InvalidNumberException e) {
+              Log.w(TAG, e);
+          }
+      }
 
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
-      Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER},
-              REGISTERED + " = 1", null, null, null, null);
-      List<Boolean> numbersSecurityStates = new ArrayList<>();
+      String where = REGISTERED + " = 1 AND " + NUMBER + " IN (\"" + TextUtils.join("\",\"", formattedNumbers) + "\")";
+      Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER}, where, null, null, null, null);
 
       if (!cursor.moveToFirst()) {
           return STATE_ALL_CONTACTS_UNSECURE;
-      }
-
-      for (String number : numbers) {
-          boolean isNumberActive = false;
-          number = number.replace(" ", "");
-          cursor.moveToFirst();
-          do {
-              if (number.equals(cursor.getString(0))) {
-                  isNumberActive = true;
-                  break;
-              }
-          } while (cursor.moveToNext());
-
-        numbersSecurityStates.add(isNumberActive);
-      }
-
-      cursor.close();
-
-      if (numbersSecurityStates.contains(true) && numbersSecurityStates.contains(false)) {
-          return STATE_CONTACTS_MIXED;
-      } else if (numbersSecurityStates.contains(true)) {
+      } else if (numbers.size() <= cursor.getCount()) {
           return STATE_ALL_CONTACTS_SECURE;
       } else {
-          return STATE_ALL_CONTACTS_UNSECURE;
+          return STATE_CONTACTS_MIXED;
       }
   }
 
