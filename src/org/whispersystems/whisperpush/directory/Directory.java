@@ -136,7 +136,7 @@ public class Directory {
       }
 
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
-      String where = REGISTERED + " = 1 AND " + NUMBER + " IN (\"" + TextUtils.join("\",\"", formattedNumbers) + "\")";
+      String where = REGISTERED + " = 1 AND " + NUMBER + " IN ('" + TextUtils.join("','", formattedNumbers) + "')";
       Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER}, where, null, null, null, null);
 
       if (!cursor.moveToFirst()) {
