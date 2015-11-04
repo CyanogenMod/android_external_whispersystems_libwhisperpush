@@ -74,7 +74,7 @@ public class DirectoryRefreshListener extends BroadcastReceiver {
 
         if (time <= System.currentTimeMillis()) {
             if (time != 0) {
-                DirectoryRefreshService.requestSync(context);
+                DirectoryRefreshService.requestSync(context, false);
             }
             time = System.currentTimeMillis() + DIR_INTERVAL;
         }

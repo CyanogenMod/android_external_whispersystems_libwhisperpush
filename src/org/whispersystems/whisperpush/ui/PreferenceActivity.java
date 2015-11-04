@@ -156,15 +156,17 @@ public class PreferenceActivity extends Activity {
             mMyIdentityPreference.setOnPreferenceClickListener(this);
 
             findPreference(PREF_REVIEW_IDENTITIES).setOnPreferenceClickListener(this);
-            findPreference(PREF_SYNC_SECURE_CONTACTS).setOnPreferenceClickListener(this);
 
+            Preference synContactsPreference = findPreference(PREF_SYNC_SECURE_CONTACTS);
             if (WhisperPreferences.isRegistered(getActivity())) {
                 Log.d(TAG, "WhisperPush is registered");
                 mRegistrationCategory.removePreference(mRegisterPreference);
+                synContactsPreference.setOnPreferenceClickListener(this);
             } else {
                 Log.d(TAG, "WhisperPush is not registered");
                 mRegistrationCategory.removePreference(mUnregisterPreference);
                 mOtherCategory.removePreference(mMyIdentityPreference);
+                mOtherCategory.removePreference(synContactsPreference);
             }
         }
 
@@ -185,7 +187,7 @@ public class PreferenceActivity extends Activity {
                 startActivity(new Intent(context, ReviewIdentitiesActivity.class));
             }
             else if (PREF_SYNC_SECURE_CONTACTS.equals(key)) {
-                DirectoryRefreshService.requestSync(context);
+                DirectoryRefreshService.requestSync(context, true);
             }
             return true;
         }

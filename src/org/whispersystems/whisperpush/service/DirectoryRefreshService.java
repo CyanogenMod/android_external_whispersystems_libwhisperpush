@@ -16,12 +16,14 @@
  */
 package org.whispersystems.whisperpush.service;
 
-import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.whispersystems.textsecure.api.TextSecureAccountManager;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
@@ -37,6 +39,7 @@ public class DirectoryRefreshService extends IntentService {
     private static final String TAG = "DirectoryRefreshService";
 
     private static final String EXTRA_ACTION = "action";
+    private static final String EXTRA_ALLOW_SHOW_TOAST = "showResultToast";
 
     private static final String ACTION_SYNC = "SYNC";
 
@@ -45,8 +48,9 @@ public class DirectoryRefreshService extends IntentService {
                 .putExtra(EXTRA_ACTION, ACTION_SYNC);
     }
 
-    public static void requestSync(Context context) {
-        context.startService(createSyncIntent(context));
+    public static void requestSync(Context context, boolean allowShowToast) {
+        context.startService(createSyncIntent(context)
+                .putExtra(EXTRA_ALLOW_SHOW_TOAST, allowShowToast));
     }
 
     public DirectoryRefreshService() {
@@ -60,19 +64,24 @@ public class DirectoryRefreshService extends IntentService {
             return;
         }
         if (ACTION_SYNC.equals(action)) {
-            handleRefreshAction();
+            boolean allowShowToast = intent.getBooleanExtra(EXTRA_ALLOW_SHOW_TOAST, false);
+            handleRefreshAction(allowShowToast);
         }
     }
 
-    @SuppressLint("Wakelock") // released in RefreshRunnable.run
-    private void handleRefreshAction() {
-        Context context = this;
+    private void handleRefreshAction(boolean allowShowToast) {
+        final Context context = this;
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Directory Refresh");
         wakeLock.acquire();
+        Handler mainHandler = new Handler(Looper.getMainLooper());
         try {
             Log.w(TAG, "Refreshing directory...");
             WhisperPush whisperPush = WhisperPush.getInstance(this);
+            if (!whisperPush.isSecureMessagingActive()) {
+                Log.w(TAG, "Unregistered. Sync aborted.");
+                return;
+            }
             Directory directory = whisperPush.getContactDirectory();
             String localNumber = whisperPush.getLocalNumber();
             TextSecureAccountManager manager = WhisperServiceFactory.createAccountManager(context);
@@ -85,11 +94,26 @@ public class DirectoryRefreshService extends IntentService {
             }
             directory.setNumbers(activeTokens, eligibleContactNumbers);
             Log.w(TAG, "Directory refresh complete...");
+            if (allowShowToast) {
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "Secure contacts synchronized.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         } catch (Exception e) {
             Log.e(TAG, "Contact Directory sync failed", e);
+            if (allowShowToast) {
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "Secure contacts sync failed.", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
         } finally {
-            if (wakeLock != null && wakeLock.isHeld())
-                wakeLock.release();
+            wakeLock.release();
         }
     }
 
