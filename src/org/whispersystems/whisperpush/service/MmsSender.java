@@ -77,12 +77,22 @@ public class MmsSender {
         EncodedStringValue[] destinations = message.getTo();
         EncodedStringValue[] values = message.getBcc();
         List<EncodedStringValue> sentDestinations = values != null ? Arrays.asList(values) : null;
+
         List<TextSecureAddress> recipients = new ArrayList<>(destinations.length);
 
         String localNumber = WhisperPreferences.getLocalNumber(mContext);
         for (EncodedStringValue destination : destinations) {
-            if (sentDestinations != null && sentDestinations.contains(destination)) {
-                continue;
+            if (sentDestinations != null) {
+                boolean shouldContinue = false;
+                for (EncodedStringValue value : sentDestinations) {
+                    if (value.getString().equals(destination.getString())) {
+                        shouldContinue = true;
+                        break;
+                    }
+                }
+                if (shouldContinue) {
+                    continue;
+                }
             }
 
             String e164number;
