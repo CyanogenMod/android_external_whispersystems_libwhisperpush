@@ -74,18 +74,15 @@ public class DirectoryRefreshListener extends BroadcastReceiver {
 
         if (time <= System.currentTimeMillis()) {
             if (time != 0) {
-                Intent serviceIntent = new Intent(context, DirectoryRefreshService.class);
-                serviceIntent.setAction(DirectoryRefreshService.REFRESH_ACTION);
-                context.startService(serviceIntent);
+                DirectoryRefreshService.requestSync(context);
             }
-
             time = System.currentTimeMillis() + DIR_INTERVAL;
         }
 
         Log.w("DirectoryRefreshService", "Scheduling for: " + time);
 
         alarmManager.cancel(pendingIntent);
-        alarmManager.set(AlarmManager.RTC_WAKEUP, time, pendingIntent);
+        alarmManager.set(AlarmManager.RTC, time, pendingIntent);
 
         WhisperPreferences.setDirectoryRefreshTime(context, time);
     }

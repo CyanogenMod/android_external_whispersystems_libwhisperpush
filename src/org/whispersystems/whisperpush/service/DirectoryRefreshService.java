@@ -1,112 +1,96 @@
 /**
- * Copyright (C) 2013 The CyanogenMod Project
- *
+ * Copyright (C) 2015 The CyanogenMod Project
+ * <p/>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p/>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p/>
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.whispersystems.whisperpush.service;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import org.whispersystems.textsecure.api.TextSecureAccountManager;
-import org.whispersystems.textsecure.api.push.ContactTokenDetails;
-import org.whispersystems.textsecure.api.push.exceptions.NonSuccessfulResponseCodeException;
-import org.whispersystems.textsecure.api.push.exceptions.PushNetworkException;
-import org.whispersystems.whisperpush.directory.Directory;
-import org.whispersystems.whisperpush.util.WhisperPreferences;
-import org.whispersystems.whisperpush.util.WhisperServiceFactory;
-
 import android.annotation.SuppressLint;
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
-public class DirectoryRefreshService extends Service {
+import org.whispersystems.textsecure.api.TextSecureAccountManager;
+import org.whispersystems.textsecure.api.push.ContactTokenDetails;
+import org.whispersystems.whisperpush.WhisperPush;
+import org.whispersystems.whisperpush.directory.Directory;
+import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
-    public  static final String REFRESH_ACTION = "org.whispersystems.whisperpush.REFRESH_ACTION";
+import java.util.List;
+import java.util.Set;
+
+public class DirectoryRefreshService extends IntentService {
+
     private static final String TAG = "DirectoryRefreshService";
-    private static final Executor executor = Executors.newSingleThreadExecutor();
 
-    @Override
-    public int onStartCommand (Intent intent, int flags, int startId) {
-        if (REFRESH_ACTION.equals(intent.getAction())) {
-            handleRefreshAction();
-        }
-        return START_NOT_STICKY;
+    private static final String EXTRA_ACTION = "action";
+
+    private static final String ACTION_SYNC = "SYNC";
+
+    public static Intent createSyncIntent(Context context) {
+        return new Intent(context, DirectoryRefreshService.class)
+                .putExtra(EXTRA_ACTION, ACTION_SYNC);
+    }
+
+    public static void requestSync(Context context) {
+        context.startService(createSyncIntent(context));
+    }
+
+    public DirectoryRefreshService() {
+        super("secure-contacts-sync");
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    protected void onHandleIntent(Intent intent) {
+        String action = intent.getStringExtra(EXTRA_ACTION);
+        if (action == null) {
+            return;
+        }
+        if (ACTION_SYNC.equals(action)) {
+            handleRefreshAction();
+        }
     }
 
     @SuppressLint("Wakelock") // released in RefreshRunnable.run
     private void handleRefreshAction() {
+        Context context = this;
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Directory Refresh");
         wakeLock.acquire();
+        try {
+            Log.w(TAG, "Refreshing directory...");
+            WhisperPush whisperPush = WhisperPush.getInstance(this);
+            Directory directory = whisperPush.getContactDirectory();
+            String localNumber = whisperPush.getLocalNumber();
+            TextSecureAccountManager manager = WhisperServiceFactory.createAccountManager(context);
 
-        executor.execute(new RefreshRunnable(wakeLock));
-    }
+            Set<String> eligibleContactNumbers = directory.getPushEligibleContactNumbers(localNumber);
+            List<ContactTokenDetails> activeTokens = manager.getContacts(eligibleContactNumbers);
 
-    private class RefreshRunnable implements Runnable {
-        private final PowerManager.WakeLock wakeLock;
-        private final Context context;
-
-        public RefreshRunnable(PowerManager.WakeLock wakeLock) {
-            this.wakeLock = wakeLock;
-            this.context  = DirectoryRefreshService.this.getApplicationContext();
-        }
-
-        public void run() {
-            try {
-                Log.w(TAG, "Refreshing directory...");
-                Directory                directory   = Directory.getInstance(context);
-                String                   localNumber = WhisperPreferences.getLocalNumber(context);
-                TextSecureAccountManager manager     = WhisperServiceFactory.createAccountManager(context);
-
-                Set<String>               eligibleContactNumbers = directory.getPushEligibleContactNumbers(localNumber);
-                List<ContactTokenDetails> activeTokens          = manager.getContacts(eligibleContactNumbers);
-
-                if (activeTokens != null) {
-                    for (ContactTokenDetails activeToken : activeTokens) {
-                        eligibleContactNumbers.remove(activeToken.getNumber());
-                    }
-
-                    directory.setNumbers(activeTokens, eligibleContactNumbers);
-                }
-
-                Log.w(TAG, "Directory refresh complete...");
-            } catch (NonSuccessfulResponseCodeException e) {
-                // FIXME Auto-generated catch block
-                Log.e(TAG, "non successful response", e);
-            } catch (PushNetworkException e) {
-                // FIXME Auto-generated catch block
-                Log.e(TAG, "push network failed", e);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                Log.e(TAG, "IO failed", e);
-            } finally {
-                if (wakeLock != null && wakeLock.isHeld())
-                    wakeLock.release();
+            for (ContactTokenDetails activeToken : activeTokens) {
+                eligibleContactNumbers.remove(activeToken.getNumber());
             }
+            directory.setNumbers(activeTokens, eligibleContactNumbers);
+            Log.w(TAG, "Directory refresh complete...");
+        } catch (Exception e) {
+            Log.e(TAG, "Contact Directory sync failed", e);
+        } finally {
+            if (wakeLock != null && wakeLock.isHeld())
+                wakeLock.release();
         }
     }
+
 }

@@ -22,6 +22,7 @@ import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureAccountManager;
 import org.whispersystems.whisperpush.R;
 import org.whispersystems.whisperpush.WhisperPush;
+import org.whispersystems.whisperpush.service.DirectoryRefreshService;
 import org.whispersystems.whisperpush.service.MessageNotifier;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
@@ -104,6 +105,7 @@ public class PreferenceActivity extends Activity {
         private static final String PREF_UNREGISTER = "pref_unregister";
         private static final String PREF_MYIDENTITY = "pref_myIdentity_setting";
         private static final String PREF_REVIEW_IDENTITIES = "pref_review_identities";
+        private static final String PREF_SYNC_SECURE_CONTACTS = "pref_sync_secure_contacts";
 
         private ProgressDialog mProgressDialog;
 
@@ -154,6 +156,7 @@ public class PreferenceActivity extends Activity {
             mMyIdentityPreference.setOnPreferenceClickListener(this);
 
             findPreference(PREF_REVIEW_IDENTITIES).setOnPreferenceClickListener(this);
+            findPreference(PREF_SYNC_SECURE_CONTACTS).setOnPreferenceClickListener(this);
 
             if (WhisperPreferences.isRegistered(getActivity())) {
                 Log.d(TAG, "WhisperPush is registered");
@@ -168,17 +171,21 @@ public class PreferenceActivity extends Activity {
         @Override
         public boolean onPreferenceClick(Preference preference) {
             Context context = getActivity();
-            if (PREF_REGISTER.equals(preference.getKey())) {
+            String key = preference.getKey();
+            if (PREF_REGISTER.equals(key)) {
                 startActivity(new Intent(context, RegistrationActivity.class));
             }
-            else if (PREF_UNREGISTER.equals(preference.getKey())) {
+            else if (PREF_UNREGISTER.equals(key)) {
                 handleUnregister();
             }
-            else if (PREF_MYIDENTITY.equals(preference.getKey())) {
+            else if (PREF_MYIDENTITY.equals(key)) {
                 startActivity(new Intent(context, ViewMyIdentityActivity.class));
             }
-            else if (PREF_REVIEW_IDENTITIES.equals(preference.getKey())) {
+            else if (PREF_REVIEW_IDENTITIES.equals(key)) {
                 startActivity(new Intent(context, ReviewIdentitiesActivity.class));
+            }
+            else if (PREF_SYNC_SECURE_CONTACTS.equals(key)) {
+                DirectoryRefreshService.requestSync(context);
             }
             return true;
         }

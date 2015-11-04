@@ -32,6 +32,13 @@
 
     <PreferenceCategory android:key="pref_other_category"
                         android:title="@string/pref_other_category__title">
+        <Preference
+            android:title="@string/pref_sync_secure_contacts__title"
+            android:summary="@string/pref_sync_secure_contacts__summary"
+            android:key="pref_sync_secure_contacts"
+            android:persistent="false">
+        </Preference>
+
         <PreferenceScreen
             android:title="@string/pref_my_identity__title"
             android:key="pref_myIdentity_setting">

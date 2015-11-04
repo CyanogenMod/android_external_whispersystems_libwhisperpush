@@ -211,5 +211,7 @@
 
     <string name="pref_review_keys__title">Review identity keys</string>
     <string name="pref_my_identity__title">View my identity key</string>
+    <string name="pref_sync_secure_contacts__title">Sync secure contacts</string>
+    <string name="pref_sync_secure_contacts__summary"></string>
 
 </resources>
