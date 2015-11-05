@@ -20,10 +20,10 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
+
 public class DatabaseFactory {
 
-    private static final String DATABASE_NAME    = "whisper_push";
-    private static final int    DATABASE_VERSION = 1;
 
     private static DatabaseFactory instance;
 
@@ -39,7 +39,7 @@ public class DatabaseFactory {
     }
 
     private DatabaseFactory(Context context) {
-        DatabaseHelper databaseHelper = new DatabaseHelper(context, DATABASE_NAME, null, DATABASE_VERSION);
+        WhisperPushDbHelper databaseHelper = WhisperPushDbHelper.getInstance(context);
 
         this.identityDatabase        = new IdentityDatabase(context, databaseHelper);
         this.addressDatabase         = new CanonicalAddressDatabase(databaseHelper);
@@ -58,25 +58,4 @@ public class DatabaseFactory {
         return getInstance(context).pendingApprovalDatabase;
     }
 
-    private static class DatabaseHelper extends SQLiteOpenHelper {
-
-        public DatabaseHelper(Context context, String name,
-                              SQLiteDatabase.CursorFactory factory,
-                              int version)
-        {
-            super(context, name, factory, version);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            CanonicalAddressDatabase.onCreate(db);
-            IdentityDatabase.onCreate(db);
-            PendingApprovalDatabase.onCreate(db);
-        }
-
-        @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
-        }
-    }
 }

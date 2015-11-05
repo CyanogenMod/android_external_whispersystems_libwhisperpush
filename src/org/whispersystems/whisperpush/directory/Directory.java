@@ -19,6 +19,7 @@ package org.whispersystems.whisperpush.directory;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
@@ -29,6 +30,7 @@ import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
+import org.whispersystems.whisperpush.db.table.ContactDirectoryTable;
 import org.whispersystems.whisperpush.util.Util;
 import org.whispersystems.whisperpush.WhisperPush;
 
@@ -41,9 +43,11 @@ import java.util.Set;
 import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.NUMBER;
 import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.REGISTERED;
 import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.RELAY;
+import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.SESSION_ACTIVE;
 import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.SUPPORTS_SMS;
 import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TABLE_NAME;
 import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TIMESTAMP;
+import static org.whispersystems.whisperpush.util.Util.isEmpty;
 
 public class Directory {
 
@@ -52,12 +56,11 @@ public class Directory {
   public static final int STATE_CONTACTS_MIXED = 3;
 
   private static final String TAG = Directory.class.getSimpleName();
-  private static final Object instanceLock = new Object();
   private static volatile Directory instance;
 
   public static Directory getInstance(Context context) {
     if (instance == null) {
-      synchronized (instanceLock) {
+      synchronized (Directory.class) {
         if (instance == null) {
           instance = new Directory(context.getApplicationContext());
         }
@@ -75,52 +78,26 @@ public class Directory {
     this.databaseHelper = WhisperPushDbHelper.getInstance(context);
   }
 
-  public boolean isSmsFallbackSupported(String e164number) {
-    SQLiteDatabase db = databaseHelper.getReadableDatabase();
-    Cursor cursor = null;
-
-    try {
-      cursor = db.query(TABLE_NAME, new String[] {SUPPORTS_SMS}, NUMBER + " = ?",
-                        new String[]{e164number}, null, null, null);
-
-      if (cursor != null && cursor.moveToFirst()) {
-        return cursor.getInt(0) == 1;
-      } else {
-        return false;
-      }
-    } finally {
-      if (cursor != null)
-        cursor.close();
-    }
-  }
-
   public boolean isActiveNumber(String e164number) throws NotInDirectoryException {
     if (e164number == null || e164number.length() == 0) {
       return false;
     }
-
-    SQLiteDatabase db = databaseHelper.getReadableDatabase();
-    Cursor cursor = null;
-
+    Cursor cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME,
+            new String[] { REGISTERED }, NUMBER + " = ?", new String[] { e164number },
+            null, null, null);
     try {
-      cursor = db.query(TABLE_NAME,
-          new String[]{REGISTERED}, NUMBER + " = ?",
-          new String[] {e164number}, null, null, null);
-
-      if (cursor != null && cursor.moveToFirst()) {
+      if (cursor.moveToFirst()) {
         return cursor.getInt(0) == 1;
       } else {
         throw new NotInDirectoryException();
       }
-
     } finally {
-      if (cursor != null)
-        cursor.close();
+      cursor.close();
     }
   }
 
   public int isAllActiveNumbers(Collection<String> numbers) {
-      if (Util.isEmpty(numbers)) {
+      if (isEmpty(numbers)) {
           return STATE_ALL_CONTACTS_UNSECURE;
       }
       List<String> formattedNumbers = new ArrayList<String>();
@@ -136,7 +113,8 @@ public class Directory {
       }
 
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
-      String where = REGISTERED + " = 1 AND " + NUMBER + " IN ('" + TextUtils.join("','", formattedNumbers) + "')";
+      String where = REGISTERED + " = 1 AND " + NUMBER
+              + " IN ('" + TextUtils.join("','", formattedNumbers) + "')";
       Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER}, where, null, null, null, null);
 
       if (!cursor.moveToFirst()) {
@@ -149,31 +127,25 @@ public class Directory {
   }
 
   public void setActiveNumberAndRelay(String e164number, String relay) {
-    if (e164number == null || e164number.length() == 0) { return; }
-
-    SQLiteDatabase db     = databaseHelper.getWritableDatabase();
-    ContentValues  values = new ContentValues();
+    SQLiteDatabase db = databaseHelper.getWritableDatabase();
+    ContentValues values = new ContentValues();
     values.put(REGISTERED, 1);
     values.put(RELAY, relay);
-    db.update(TABLE_NAME, values, NUMBER + " = ?", new String[]{e164number});
+    db.update(TABLE_NAME, values, NUMBER + " = ?", new String[] { e164number });
   }
 
   public String getRelay(String e164number) {
     SQLiteDatabase database = databaseHelper.getReadableDatabase();
-    Cursor         cursor   = null;
-
+    Cursor cursor = database.query(TABLE_NAME, null, NUMBER + " = ?", new String[] { e164number },
+            null, null, null);
     try {
-      cursor = database.query(TABLE_NAME, null, NUMBER + " = ?", new String[]{e164number}, null, null, null);
-
-      if (cursor != null && cursor.moveToFirst()) {
+      if (cursor.moveToFirst()) {
         return cursor.getString(cursor.getColumnIndexOrThrow(RELAY));
       }
-
-      return null;
     } finally {
-      if (cursor != null)
-        cursor.close();
+      cursor.close();
     }
+    return null;
   }
 
   public void setNumber(ContactTokenDetails token, boolean active) {
@@ -258,21 +230,30 @@ public class Directory {
     }
   }
 
-  public List<String> getActiveNumbers() {
-    final List<String> results = new ArrayList<String>();
-    Cursor cursor = null;
-    try {
-      cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, new String[]{NUMBER},
-          REGISTERED + " = 1", null, null, null, null);
-
-      while (cursor != null && cursor.moveToNext()) {
-        results.add(cursor.getString(0));
-      }
-      return results;
-    } finally {
-      if (cursor != null)
-        cursor.close();
+  public boolean hasActiveSession(String e164Number) {
+    if (TextUtils.isEmpty(e164Number)) {
+      return false;
     }
+    SQLiteDatabase db = databaseHelper.getReadableDatabase();
+    Cursor cursor = db.query(ContactDirectoryTable.TABLE_NAME, new String[] { SESSION_ACTIVE },
+            NUMBER + " = ?", new String[] { e164Number }, null, null, null);
+    try {
+      if (cursor.moveToFirst()) {
+        return cursor.getInt(0) == 1;
+      }
+    } finally {
+      cursor.close();
+    }
+    return false;
+  }
+
+  public void setActiveSession(String number, boolean hasActiveSession) {
+    SQLiteDatabase db = databaseHelper.getWritableDatabase();
+    ContentValues values = new ContentValues(1);
+    values.put(SESSION_ACTIVE, hasActiveSession ? 1 : 0);
+    String where = NUMBER + "=?";
+    String[] whereArgs = { number };
+    db.update(ContactDirectoryTable.TABLE_NAME, values, where, whereArgs);
   }
 
 }

@@ -17,5 +17,5 @@
 package org.whispersystems.whisperpush.directory;
 
 @SuppressWarnings("serial")
-public class NotInDirectoryException extends Throwable {
+public class NotInDirectoryException extends Exception {
 }

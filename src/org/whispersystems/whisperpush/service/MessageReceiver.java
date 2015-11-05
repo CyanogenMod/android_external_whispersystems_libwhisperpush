@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.whispersystems.libaxolotl.AxolotlAddress;
 import org.whispersystems.libaxolotl.InvalidMessageException;
 import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureMessageReceiver;
@@ -34,6 +35,7 @@ import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
 import org.whispersystems.textsecure.api.messages.TextSecureGroup;
 import org.whispersystems.textsecure.api.messages.TextSecureMessage;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
+import org.whispersystems.textsecure.api.push.TextSecureAddress;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.R;
 import org.whispersystems.whisperpush.WhisperPush;
@@ -44,7 +46,6 @@ import org.whispersystems.whisperpush.contacts.ContactsFactory;
 import org.whispersystems.whisperpush.crypto.IdentityMismatchException;
 import org.whispersystems.whisperpush.database.DatabaseFactory;
 import org.whispersystems.whisperpush.database.WPAxolotlStore;
-import org.whispersystems.whisperpush.db.CMDatabase;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
 import org.whispersystems.whisperpush.util.StatsUtils;
@@ -77,6 +78,10 @@ public class MessageReceiver {
         this.whisperPush = WhisperPush.getInstance(context);
     }
 
+    private Directory getContactDirectory() {
+        return whisperPush.getContactDirectory();
+    }
+
     public void handleNotification() {
         List<TextSecureEnvelope> messages;
         try {
@@ -99,8 +104,7 @@ public class MessageReceiver {
         if (!isActiveNumber) {
             ContactTokenDetails contactTokenDetails = new ContactTokenDetails();
             contactTokenDetails.setNumber(source);
-            whisperPush.getContactDirectory()
-                    .setNumber(contactTokenDetails, true);
+            getContactDirectory().setNumber(contactTokenDetails, true);
         }
 
         if (envelope.isReceipt()) handleReceipt(envelope);
@@ -125,25 +129,33 @@ public class MessageReceiver {
             return;
         }
 
-        if (!hasActiveSession(source)) {
-            Log.d(TAG, "New session detected for " + source);
-            setActiveSession(source);
-            MessageNotifier.notifyNewSessionIncoming(context, message);
-        }
-        updateDirectoryIfNecessary(message);
-
-        MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
-
         try {
             TextSecureMessage content = getPlaintext(message);
+            Optional<String> body = content.getBody();
+            String textBody = body.isPresent() ? body.get() : "";
+
+            boolean termination = false;
+            // TextSecure sends TERMINATE message when user taps "End secure session"
+            if ("TERMINATE".equals(textBody)) {
+                termination = true;
+                Log.i(TAG, "TERMINATE received. Secure session reset.");
+                WPAxolotlStore axolotlStore = WPAxolotlStore.getInstance(context);
+                axolotlStore.deleteSession(new AxolotlAddress(source, message.getSourceDevice()));
+                setActiveSession(source, false);
+            }
+            if (!termination && !getContactDirectory().hasActiveSession(source)) {
+                Log.d(TAG, "New session detected for " + source);
+                setActiveSession(source, true);
+                MessageNotifier.notifyNewSessionIncoming(context, message);
+            }
+            updateDirectoryIfNecessary(message);
+
+            MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
 
             Optional<TextSecureGroup> textSecureGroupOptional = content.getGroupInfo();
             long timestamp = message.getTimestamp();
 
             Optional<List<TextSecureAttachment>> attach = content.getAttachments();
-
-            Optional<String> body = content.getBody();
-            String textBody = body.isPresent() ? body.get() : "";
 
             if (textSecureGroupOptional.isPresent()) {
                 handleGroupMessage(textSecureGroupOptional, messagingBridge,
@@ -291,18 +303,14 @@ public class MessageReceiver {
 
     private boolean isActiveNumber(String e164number) {
         try {
-            return Directory.getInstance(context).isActiveNumber(e164number);
+            return getContactDirectory().isActiveNumber(e164number);
         } catch (NotInDirectoryException e) {
             return false;
         }
     }
 
-    private boolean hasActiveSession(String e164number) {
-        return CMDatabase.getInstance(context).hasActiveSession(e164number);
-    }
-
-    private void setActiveSession(String e164number) {
-        CMDatabase.getInstance(context).setActiveSession(e164number);
+    private void setActiveSession(String e164number, boolean hasActiveSession) {
+        getContactDirectory().setActiveSession(e164number, hasActiveSession);
     }
 
     private boolean isNumberBlackListed(String number) {

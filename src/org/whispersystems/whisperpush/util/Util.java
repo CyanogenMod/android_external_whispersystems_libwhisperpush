@@ -7,7 +7,9 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.InvalidKeyException;
@@ -167,6 +169,13 @@ public class Util {
         } else {
             throw new IllegalUriException("Unsupported authority " + authority);
         }
+    }
+
+    public static <T> Set<T> asSet(Collection<T> collection) {
+        if (collection instanceof Set) {
+            return (Set<T>) collection;
+        }
+        return new HashSet<>(collection);
     }
 
 }
