@@ -48,6 +48,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static org.whispersystems.whisperpush.util.Util.isRunningOnMainThread;
+
 public class MmsSender {
     private static final String TAG = MmsSender.class.getSimpleName();
 
@@ -102,7 +104,7 @@ public class MmsSender {
                 Log.w(TAG, e);
                 throw new MmsException(e);
             }
-            boolean recipientSupportsSecureMessaging = mWhisperPush.isRecipientSupportsSecureMessaging(e164number, true);
+            boolean recipientSupportsSecureMessaging = mWhisperPush.isRecipientSupportsSecureMessaging(e164number, !isRunningOnMainThread());
             if (!recipientSupportsSecureMessaging) {
                 throw new MmsException("Recipient " + e164number + " doesn't support secure messaging");
             }
