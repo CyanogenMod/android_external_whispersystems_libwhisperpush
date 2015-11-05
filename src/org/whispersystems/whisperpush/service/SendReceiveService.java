@@ -78,7 +78,7 @@ public class SendReceiveService extends Service {
                     } else if (SEND_SMS.equals(action)) {
                         OutgoingMessage message = outgoingQueue.get();
                         if (message != null) {
-                            whisperPush.getMessageSender().sendMessage(message);
+                            whisperPush.getMessageSender().sendTextMessage(message);
                         }
                     }
                 }
