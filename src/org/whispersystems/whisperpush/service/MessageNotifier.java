@@ -183,7 +183,7 @@ public class MessageNotifier {
             Notification.Builder builder = new Notification.Builder(context);
 
             Intent intent = new Intent(context, VerifyIdentityActivity.class);
-            intent.putExtra("identity_key", new PreKeyWhisperMessage(message.getMessage()).getIdentityKey().serialize());
+            intent.putExtra("identity_key", new PreKeyWhisperMessage(message.getLegacyMessage()).getIdentityKey().serialize());
             intent.putExtra("contact", contact);
             intent.setData((Uri.parse("custom://" + System.currentTimeMillis())));
 
@@ -212,7 +212,7 @@ public class MessageNotifier {
         try {
             Contact contact = ContactsFactory.getContactFromNumber(context, message.getSource(), false);
             Intent intent = new Intent(context, ViewNewIdentityActivity.class);
-            intent.putExtra("identity_key", new PreKeyWhisperMessage(message.getMessage()).getIdentityKey().serialize());
+            intent.putExtra("identity_key", new PreKeyWhisperMessage(message.getLegacyMessage()).getIdentityKey().serialize());
             intent.putExtra("contact", contact);
             intent.setData((Uri.parse("custom://" + System.currentTimeMillis())));
             PendingIntent verifyPi = PendingIntent.getActivity(context, 0, intent, 0);

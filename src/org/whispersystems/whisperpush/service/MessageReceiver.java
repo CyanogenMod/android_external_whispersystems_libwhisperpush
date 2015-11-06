@@ -31,9 +31,9 @@ import org.whispersystems.textsecure.api.TextSecureMessageReceiver;
 import org.whispersystems.textsecure.api.crypto.TextSecureCipher;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachment;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachmentPointer;
+import org.whispersystems.textsecure.api.messages.TextSecureDataMessage;
 import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
 import org.whispersystems.textsecure.api.messages.TextSecureGroup;
-import org.whispersystems.textsecure.api.messages.TextSecureMessage;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.push.TextSecureAddress;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
@@ -130,7 +130,7 @@ public class MessageReceiver {
         }
 
         try {
-            TextSecureMessage content = getPlaintext(message);
+            TextSecureDataMessage content = getPlaintext(message);
             Optional<String> body = content.getBody();
             String textBody = body.isPresent() ? body.get() : "";
 
@@ -238,13 +238,14 @@ public class MessageReceiver {
         }
     }
 
-    private TextSecureMessage getPlaintext(TextSecureEnvelope envelope)
+    private TextSecureDataMessage getPlaintext(TextSecureEnvelope envelope)
             throws IdentityMismatchException, InvalidMessageException
     {
         try {
             WPAxolotlStore store = WPAxolotlStore.getInstance(context);
-            TextSecureCipher cipher = new TextSecureCipher(store);
-            return cipher.decrypt(envelope);
+            TextSecureAddress localAddress = new TextSecureAddress(whisperPush.getLocalNumber());
+            TextSecureCipher cipher = new TextSecureCipher(localAddress, store);
+            return cipher.decrypt(envelope).getDataMessage().get();
         } catch (Exception e) {
             if (e instanceof IdentityMismatchException) {
                 throw (IdentityMismatchException)e;

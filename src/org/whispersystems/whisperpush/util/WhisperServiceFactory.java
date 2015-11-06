@@ -18,6 +18,7 @@ public class WhisperServiceFactory {
                                            preferences.getLocalNumber(),
                                            WhisperPreferences.getPushServerPassword(context),
                                            WPAxolotlStore.getInstance(context),
+                                           null,
                                            Optional.<EventListener>absent());
     }
 
@@ -26,7 +27,7 @@ public class WhisperServiceFactory {
                                              new WhisperPushTrustStore(context),
                                              WhisperPreferences.getLocalNumber(context),
                                              WhisperPreferences.getPushServerPassword(context),
-                                             WhisperPreferences.getSignalingKey(context));
+                                             WhisperPreferences.getSignalingKey(context), null);
     }
 
     public static TextSecureAccountManager createAccountManager(Context context) {
@@ -34,7 +35,7 @@ public class WhisperServiceFactory {
         return new TextSecureAccountManager(Release.PUSH_URL,
                                             new WhisperPushTrustStore(context),
                                             preferences.getLocalNumber(),
-                                            WhisperPreferences.getPushServerPassword(context));
+                                            WhisperPreferences.getPushServerPassword(context), null);
     }
 
     public static TextSecureAccountManager initAccountManager(Context context, String number, String password) {

@@ -284,8 +284,8 @@ public class RegistrationService extends Service {
             setState(new RegistrationState(RegistrationState.STATE_VERIFYING, number));
             String challenge = waitForChallenge();
             registrationTimerHandler.stop();
-            manager.verifyAccount(challenge, signalingKey, false,
-                                  WhisperPreferences.getInstallId(this));
+            manager.verifyAccountWithCode(challenge, signalingKey,
+                                  WhisperPreferences.getInstallId(this), false);
 
             handleCommonRegistration(manager, number);
 

@@ -65,7 +65,7 @@ public class PendingIdentityItemView extends RelativeLayout
     public void set(TextSecureEnvelope message) {
         try {
             this.contact     = ContactsFactory.getContactFromNumber(getContext(), message.getSource(), true);
-            this.identityKey = new PreKeyWhisperMessage(message.getMessage()).getIdentityKey();
+            this.identityKey = new PreKeyWhisperMessage(message.getLegacyMessage()).getIdentityKey();
 
             identityName.setText(contact.getNumber());
             details.setText(String.format(getContext().getString(R.string.PendingIdentityItemView_received_s),
