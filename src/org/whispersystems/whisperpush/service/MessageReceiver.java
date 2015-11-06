@@ -134,42 +134,40 @@ public class MessageReceiver {
             Optional<String> body = content.getBody();
             String textBody = body.isPresent() ? body.get() : "";
 
-            boolean termination = false;
-            // TextSecure sends TERMINATE message when user taps "End secure session"
-            if ("TERMINATE".equals(textBody)) {
-                termination = true;
-                Log.i(TAG, "TERMINATE received. Secure session reset.");
+            if (content.isEndSession()) {
+                Log.i(TAG, "Secure session reset.");
                 WPAxolotlStore axolotlStore = WPAxolotlStore.getInstance(context);
-                axolotlStore.deleteSession(new AxolotlAddress(source, message.getSourceDevice()));
+                axolotlStore.deleteAllSessions(source);
                 setActiveSession(source, false);
-            }
-            if (!termination && !getContactDirectory().hasActiveSession(source)) {
-                Log.d(TAG, "New session detected for " + source);
-                setActiveSession(source, true);
-                MessageNotifier.notifyNewSessionIncoming(context, message);
-            }
-            updateDirectoryIfNecessary(message);
-
-            MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
-
-            Optional<TextSecureGroup> textSecureGroupOptional = content.getGroupInfo();
-            long timestamp = message.getTimestamp();
-
-            Optional<List<TextSecureAttachment>> attach = content.getAttachments();
-
-            if (textSecureGroupOptional.isPresent()) {
-                handleGroupMessage(textSecureGroupOptional, messagingBridge,
-                        source, attach, textBody, timestamp);
-            } else if (attach.isPresent()) {
-                handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
             } else {
-                Uri messageUri = messagingBridge
-                        .storeIncomingTextMessage(0, source, textBody, timestamp, false, true);
-                whisperPush.markMessageAsSecurelySent(messageUri);
-            }
+                if (!getContactDirectory().hasActiveSession(source)) {
+                    Log.d(TAG, "New session detected for " + source);
+                    setActiveSession(source, true);
+                    MessageNotifier.notifyNewSessionIncoming(context, message);
+                }
+                updateDirectoryIfNecessary(message);
 
-            if (StatsUtils.isStatsActive(context)) {
-                WhisperPreferences.setWasActive(context, true);
+                MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
+
+                Optional<TextSecureGroup> textSecureGroupOptional = content.getGroupInfo();
+                long timestamp = message.getTimestamp();
+
+                Optional<List<TextSecureAttachment>> attach = content.getAttachments();
+
+                if (textSecureGroupOptional.isPresent()) {
+                    handleGroupMessage(textSecureGroupOptional, messagingBridge,
+                            source, attach, textBody, timestamp);
+                } else if (attach.isPresent()) {
+                    handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
+                } else {
+                    Uri messageUri = messagingBridge
+                            .storeIncomingTextMessage(0, source, textBody, timestamp, false, true);
+                    whisperPush.markMessageAsSecurelySent(messageUri);
+                }
+
+                if (StatsUtils.isStatsActive(context)) {
+                    WhisperPreferences.setWasActive(context, true);
+                }
             }
         } catch (IdentityMismatchException e) {
             Log.w(TAG, e);
