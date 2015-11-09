@@ -66,7 +66,6 @@ public class WhisperPush {
     private final WhisperPreferences mPreferences;
     private final Directory mContactDirectory;
     private final ContentResolver mContentResolver;
-    private volatile TextSecureAccountManager mTextSecureAccountManager;
     private volatile WhisperPushMessageSender mMessageSender;
 
     private static boolean visible = false;
@@ -103,14 +102,7 @@ public class WhisperPush {
     }
 
     private TextSecureAccountManager getTextSecureAccountManager() {
-        if (mTextSecureAccountManager == null) {
-            synchronized (this) {
-                if (mTextSecureAccountManager == null) {
-                    mTextSecureAccountManager = WhisperServiceFactory.createAccountManager(mContext);
-                }
-            }
-        }
-        return mTextSecureAccountManager;
+        return WhisperServiceFactory.createAccountManager(mContext);
     }
 
     public WhisperPushMessageSender getMessageSender() {

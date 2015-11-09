@@ -22,6 +22,8 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Pair;
 
+import org.whispersystems.whisperpush.service.MessageReceiver;
+
 /**
  * A layer of indirection in front of the app's SharedPreferences.
  */
@@ -74,10 +76,17 @@ public class WhisperPreferences {
                 mLocalNumber = null;
             }
             else if (PREF_REGISTRATION_COMPLETE.equals(key)) {
-                mIsRegistered = null;
+                onRegistrationChanged(preferences.getBoolean(key, false));
             }
         }
     };
+
+    private void onRegistrationChanged(boolean registered) {
+        mIsRegistered = null;
+        if (!registered) {
+            MessageReceiver.getInstance(mContext).reset();
+        }
+    }
 
     public String getLocalNumber() {
         String localNumber = mLocalNumber;

@@ -24,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.whispersystems.libaxolotl.AxolotlAddress;
 import org.whispersystems.libaxolotl.InvalidMessageException;
 import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureMessageReceiver;
@@ -68,24 +67,47 @@ public class MessageReceiver {
 
     private static final String TAG = MessageReceiver.class.getSimpleName();
 
-    private final Context context;
-    private final TextSecureMessageReceiver receiver;
-    private final WhisperPush whisperPush;
+    private static volatile MessageReceiver sInstance;
 
-    public MessageReceiver(Context context) {
-        this.context = context;
-        this.receiver = WhisperServiceFactory.createMessageReceiver(context);
-        this.whisperPush = WhisperPush.getInstance(context);
+    private final Context context;
+    private final WhisperPush whisperPush;
+    private volatile TextSecureMessageReceiver mTextSecureReceiver;
+
+    public static MessageReceiver getInstance(Context context) {
+        if (sInstance == null) {
+            synchronized (MessageReceiver.class) {
+                if (sInstance == null) {
+                    sInstance = new MessageReceiver(context.getApplicationContext());
+                }
+            }
+        }
+        return sInstance;
+    }
+
+    private MessageReceiver(Context appContext) {
+        this.context = appContext;
+        this.whisperPush = WhisperPush.getInstance(appContext);
     }
 
     private Directory getContactDirectory() {
         return whisperPush.getContactDirectory();
     }
 
+    private TextSecureMessageReceiver getTextSecureReceiver() {
+        if (mTextSecureReceiver == null) {
+            synchronized (this) {
+                if (mTextSecureReceiver == null) {
+                    mTextSecureReceiver = WhisperServiceFactory.createMessageReceiver(context);
+                }
+            }
+        }
+        return mTextSecureReceiver;
+    }
+
     public void handleNotification() {
         List<TextSecureEnvelope> messages;
         try {
-            messages = receiver.retrieveMessages();
+            messages = getTextSecureReceiver().retrieveMessages();
             for(TextSecureEnvelope message : messages) {
                 handleEnvelope(message, true);
             }
@@ -259,7 +281,7 @@ public class MessageReceiver {
     {
         AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
         List<Pair<String, String>> results = new LinkedList<Pair<String, String>>();
-
+        TextSecureMessageReceiver receiver = getTextSecureReceiver();
         for (TextSecureAttachment attachment : list) {
             InputStream stream = null;
             byte[] attachmentBytes;
@@ -317,6 +339,10 @@ public class MessageReceiver {
         String formatted = PhoneNumberFormatter.formatE164(local, number);
         int type = BlacklistUtils.isListed(context, formatted, BlacklistUtils.BLOCK_MESSAGES);
         return type != BlacklistUtils.MATCH_NONE;
+    }
+
+    public synchronized void reset() {
+        mTextSecureReceiver = null;
     }
 
 }

@@ -54,7 +54,7 @@ import java.util.List;
 
 public class WhisperPushMessageSender {
 
-    private static final String TAG = "WhisperPushMessageSender";
+    private static final String TAG = "WPMessageSender";
 
     private final Context context;
     private final WhisperPush whisperPush;

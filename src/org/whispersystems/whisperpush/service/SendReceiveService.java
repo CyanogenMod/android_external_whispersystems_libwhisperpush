@@ -54,7 +54,7 @@ public class SendReceiveService extends Service {
     @Override
     public void onCreate() {
         this.whisperPush = WhisperPush.getInstance(this);
-        this.messageReceiver = new MessageReceiver(this);
+        this.messageReceiver = MessageReceiver.getInstance(this);
     }
 
     @Override
