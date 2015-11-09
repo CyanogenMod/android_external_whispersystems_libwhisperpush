@@ -229,7 +229,7 @@ public class WhisperPushMessageSender {
         String bodyText = null;
 
         for (int i = 0; i < body.getPartsNum(); i++) {
-            if (ContentType.isTextType(Util.toIsoString(body.getPart(i).getContentType()))) {
+            if (ContentType.TEXT_PLAIN.equals(Util.toIsoString(body.getPart(i).getContentType()))) {
                 String partText;
 
                 try {

@@ -103,12 +103,14 @@ public class Directory {
       List<String> formattedNumbers = new ArrayList<String>();
       WhisperPush whisperPush = WhisperPush.getInstance(context);
 
+      boolean hasWrongNumbers = false;
       for (String number : numbers) {
           try {
               String formattedNumber = whisperPush.formatNumber(number);
               formattedNumbers.add(formattedNumber);
           } catch (InvalidNumberException e) {
-              Log.w(TAG, e);
+              Log.i(TAG, "Can't format number " + number, e);
+              hasWrongNumbers = true;
           }
       }
 
@@ -117,12 +119,13 @@ public class Directory {
               + " IN ('" + TextUtils.join("','", formattedNumbers) + "')";
       Cursor cursor = db.query(TABLE_NAME, new String[]{NUMBER}, where, null, null, null, null);
 
-      if (!cursor.moveToFirst()) {
+      int secureNumberCount = cursor.getCount();
+      if (secureNumberCount == 0) {
           return STATE_ALL_CONTACTS_UNSECURE;
-      } else if (numbers.size() <= cursor.getCount()) {
-          return STATE_ALL_CONTACTS_SECURE;
-      } else {
+      } else if (hasWrongNumbers || secureNumberCount != numbers.size()) {
           return STATE_CONTACTS_MIXED;
+      } else {
+          return STATE_ALL_CONTACTS_SECURE;
       }
   }
 
