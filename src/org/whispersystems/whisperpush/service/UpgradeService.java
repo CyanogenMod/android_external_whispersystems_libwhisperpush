@@ -25,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+@Deprecated
 public class UpgradeService extends Service {
     volatile boolean mDisableOnUnbind = false;
 
