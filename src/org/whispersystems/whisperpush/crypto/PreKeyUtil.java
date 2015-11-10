@@ -191,6 +191,8 @@ public class PreKeyUtil {
     @JsonProperty
     private int nextPreKeyId;
 
+    public PreKeyIndex() {}
+
     public PreKeyIndex(int nextPreKeyId) {
       this.nextPreKeyId = nextPreKeyId;
     }
@@ -201,6 +203,8 @@ public class PreKeyUtil {
 
     @JsonProperty
     private int nextSignedPreKeyId;
+
+    public SignedPreKeyIndex() {}
 
     public SignedPreKeyIndex(int nextSignedPreKeyId) {
       this.nextSignedPreKeyId = nextSignedPreKeyId;

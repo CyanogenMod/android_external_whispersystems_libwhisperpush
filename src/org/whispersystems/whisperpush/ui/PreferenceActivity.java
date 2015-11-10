@@ -46,6 +46,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+
 public class PreferenceActivity extends Activity {
 
     private static final String PRIVACY_POLICY_URL = "https://cyngn.com/legal/privacy-policy";
@@ -200,17 +202,21 @@ public class PreferenceActivity extends Activity {
             mProgressDialog.setIndeterminate(true);
             mProgressDialog.show();
 
+            final Context context = getActivity().getApplicationContext();
+
             new AsyncTask<Void, Void, Boolean>() {
                 @Override
                 protected Boolean doInBackground(Void... param) {
                     TextSecureAccountManager manager =
-                            WhisperServiceFactory.createAccountManager(getActivity());
+                            WhisperServiceFactory.createAccountManager(context);
                     try {
                         manager.setGcmId(Optional.<String>absent()); // unregister
+                        GoogleCloudMessaging.getInstance(context).unregister();
                     } catch (IOException e) {
+                        Log.w(TAG, e);
                         return false;
                     }
-                    WhisperPreferences.setRegistered(getActivity(), false);
+                    WhisperPreferences.setRegistered(context, false);
                     return true;
                 }
 

@@ -67,7 +67,7 @@ public class PendingApprovalDatabase {
         values.put(SOURCE, envelope.getSource());
         values.put(DEVICE, envelope.getSourceDevice());
         values.put(RELAY, envelope.getRelay());
-        values.put(BODY, Base64.encodeBytes(envelope.getMessage()));
+        values.put(BODY, Base64.encodeBytes(envelope.getLegacyMessage()));
         values.put(TIMESTAMP, envelope.getTimestamp());
 
         long result = databaseHelper.getWritableDatabase().insert(TABLE_NAME, null, values);
@@ -125,7 +125,7 @@ public class PendingApprovalDatabase {
                 long   timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(TIMESTAMP));
                 byte[] body      = Base64.decode(cursor.getString(cursor.getColumnIndexOrThrow(BODY)));
 
-                return new TextSecureEnvelope(type, source, device, relay, timestamp, body);
+                return new TextSecureEnvelope(type, source, device, relay, timestamp, body, null);
             } catch (IOException e) {
                 throw new AssertionError(e);
             }

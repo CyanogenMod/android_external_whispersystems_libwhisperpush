@@ -134,7 +134,7 @@ public class VerifyIdentityActivity extends KeyScanningActivity {
 
                 while ((message = reader.getNext()) != null) {
                     try {
-                        PreKeyWhisperMessage keyExchangeMessage = new PreKeyWhisperMessage(message.getMessage());
+                        PreKeyWhisperMessage keyExchangeMessage = new PreKeyWhisperMessage(message.getLegacyMessage());
 
                         if (keyExchangeMessage.getIdentityKey().equals(identityKey)) {
                             database.delete(reader.getCurrentId());
@@ -204,7 +204,7 @@ public class VerifyIdentityActivity extends KeyScanningActivity {
 
             while ((message = reader.getNext()) != null) {
                 try {
-                    PreKeyWhisperMessage keyExchange = new PreKeyWhisperMessage(message.getMessage());
+                    PreKeyWhisperMessage keyExchange = new PreKeyWhisperMessage(message.getLegacyMessage());
 
                     if (keyExchange.getIdentityKey().equals(identityKey)) {
                         Intent intent = new Intent(context, SendReceiveService.class);

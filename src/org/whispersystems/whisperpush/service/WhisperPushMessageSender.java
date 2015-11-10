@@ -32,8 +32,8 @@ import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureMessageSender;
 import org.whispersystems.textsecure.api.crypto.UntrustedIdentityException;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachment;
+import org.whispersystems.textsecure.api.messages.TextSecureDataMessage;
 import org.whispersystems.textsecure.api.messages.TextSecureGroup;
-import org.whispersystems.textsecure.api.messages.TextSecureMessage;
 import org.whispersystems.textsecure.api.push.TextSecureAddress;
 import org.whispersystems.textsecure.api.push.exceptions.EncapsulatedExceptions;
 import org.whispersystems.textsecure.api.push.exceptions.UnregisteredUserException;
@@ -54,7 +54,7 @@ import java.util.List;
 
 public class WhisperPushMessageSender {
 
-    private static final String TAG = "WhisperPushMessageSender";
+    private static final String TAG = "WPMessageSender";
 
     private final Context context;
     private final WhisperPush whisperPush;
@@ -100,7 +100,7 @@ public class WhisperPushMessageSender {
             String e164number = whisperPush.formatNumber(destination);
             TextSecureAddress address = new TextSecureAddress(e164number);
             TextSecureMessageSender sender = WhisperServiceFactory.createMessageSender(context);
-            TextSecureMessage body = TextSecureMessage.newBuilder()
+            TextSecureDataMessage body = TextSecureDataMessage.newBuilder()
                     .withBody(message.getMessageBody())
                     .build();
             sender.sendMessage(address, body);
@@ -134,7 +134,7 @@ public class WhisperPushMessageSender {
 
         try {
             String body = getMessageText(message.getBody());
-            TextSecureMessage.Builder builder = TextSecureMessage.newBuilder()
+            TextSecureDataMessage.Builder builder = TextSecureDataMessage.newBuilder()
                     .withBody(body)
                     .withAttachments(attachments);
             if (textSecureGroup != null) {
@@ -177,7 +177,7 @@ public class WhisperPushMessageSender {
                     null);
 
             messageSender.sendMessage(recipients,
-                    TextSecureMessage.newBuilder().asGroupMessage(textSecureGroup).build());
+                    TextSecureDataMessage.newBuilder().asGroupMessage(textSecureGroup).build());
 
         } catch (IOException e) {
             Log.w(TAG, e);

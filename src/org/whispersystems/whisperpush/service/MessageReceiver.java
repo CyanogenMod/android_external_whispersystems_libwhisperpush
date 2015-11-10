@@ -24,16 +24,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.whispersystems.libaxolotl.AxolotlAddress;
 import org.whispersystems.libaxolotl.InvalidMessageException;
 import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureMessageReceiver;
 import org.whispersystems.textsecure.api.crypto.TextSecureCipher;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachment;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachmentPointer;
+import org.whispersystems.textsecure.api.messages.TextSecureDataMessage;
 import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
 import org.whispersystems.textsecure.api.messages.TextSecureGroup;
-import org.whispersystems.textsecure.api.messages.TextSecureMessage;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.push.TextSecureAddress;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
@@ -68,24 +67,47 @@ public class MessageReceiver {
 
     private static final String TAG = MessageReceiver.class.getSimpleName();
 
-    private final Context context;
-    private final TextSecureMessageReceiver receiver;
-    private final WhisperPush whisperPush;
+    private static volatile MessageReceiver sInstance;
 
-    public MessageReceiver(Context context) {
-        this.context = context;
-        this.receiver = WhisperServiceFactory.createMessageReceiver(context);
-        this.whisperPush = WhisperPush.getInstance(context);
+    private final Context context;
+    private final WhisperPush whisperPush;
+    private volatile TextSecureMessageReceiver mTextSecureReceiver;
+
+    public static MessageReceiver getInstance(Context context) {
+        if (sInstance == null) {
+            synchronized (MessageReceiver.class) {
+                if (sInstance == null) {
+                    sInstance = new MessageReceiver(context.getApplicationContext());
+                }
+            }
+        }
+        return sInstance;
+    }
+
+    private MessageReceiver(Context appContext) {
+        this.context = appContext;
+        this.whisperPush = WhisperPush.getInstance(appContext);
     }
 
     private Directory getContactDirectory() {
         return whisperPush.getContactDirectory();
     }
 
+    private TextSecureMessageReceiver getTextSecureReceiver() {
+        if (mTextSecureReceiver == null) {
+            synchronized (this) {
+                if (mTextSecureReceiver == null) {
+                    mTextSecureReceiver = WhisperServiceFactory.createMessageReceiver(context);
+                }
+            }
+        }
+        return mTextSecureReceiver;
+    }
+
     public void handleNotification() {
         List<TextSecureEnvelope> messages;
         try {
-            messages = receiver.retrieveMessages();
+            messages = getTextSecureReceiver().retrieveMessages();
             for(TextSecureEnvelope message : messages) {
                 handleEnvelope(message, true);
             }
@@ -130,46 +152,44 @@ public class MessageReceiver {
         }
 
         try {
-            TextSecureMessage content = getPlaintext(message);
+            TextSecureDataMessage content = getPlaintext(message);
             Optional<String> body = content.getBody();
             String textBody = body.isPresent() ? body.get() : "";
 
-            boolean termination = false;
-            // TextSecure sends TERMINATE message when user taps "End secure session"
-            if ("TERMINATE".equals(textBody)) {
-                termination = true;
-                Log.i(TAG, "TERMINATE received. Secure session reset.");
+            if (content.isEndSession()) {
+                Log.i(TAG, "Secure session reset.");
                 WPAxolotlStore axolotlStore = WPAxolotlStore.getInstance(context);
-                axolotlStore.deleteSession(new AxolotlAddress(source, message.getSourceDevice()));
+                axolotlStore.deleteAllSessions(source);
                 setActiveSession(source, false);
-            }
-            if (!termination && !getContactDirectory().hasActiveSession(source)) {
-                Log.d(TAG, "New session detected for " + source);
-                setActiveSession(source, true);
-                MessageNotifier.notifyNewSessionIncoming(context, message);
-            }
-            updateDirectoryIfNecessary(message);
-
-            MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
-
-            Optional<TextSecureGroup> textSecureGroupOptional = content.getGroupInfo();
-            long timestamp = message.getTimestamp();
-
-            Optional<List<TextSecureAttachment>> attach = content.getAttachments();
-
-            if (textSecureGroupOptional.isPresent()) {
-                handleGroupMessage(textSecureGroupOptional, messagingBridge,
-                        source, attach, textBody, timestamp);
-            } else if (attach.isPresent()) {
-                handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
             } else {
-                Uri messageUri = messagingBridge
-                        .storeIncomingTextMessage(0, source, textBody, timestamp, false, true);
-                whisperPush.markMessageAsSecurelySent(messageUri);
-            }
+                if (!getContactDirectory().hasActiveSession(source)) {
+                    Log.d(TAG, "New session detected for " + source);
+                    setActiveSession(source, true);
+                    MessageNotifier.notifyNewSessionIncoming(context, message);
+                }
+                updateDirectoryIfNecessary(message);
 
-            if (StatsUtils.isStatsActive(context)) {
-                WhisperPreferences.setWasActive(context, true);
+                MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
+
+                Optional<TextSecureGroup> textSecureGroupOptional = content.getGroupInfo();
+                long timestamp = message.getTimestamp();
+
+                Optional<List<TextSecureAttachment>> attach = content.getAttachments();
+
+                if (textSecureGroupOptional.isPresent()) {
+                    handleGroupMessage(textSecureGroupOptional, messagingBridge,
+                            source, attach, textBody, timestamp);
+                } else if (attach.isPresent()) {
+                    handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
+                } else {
+                    Uri messageUri = messagingBridge
+                            .storeIncomingTextMessage(0, source, textBody, timestamp, false, true);
+                    whisperPush.markMessageAsSecurelySent(messageUri);
+                }
+
+                if (StatsUtils.isStatsActive(context)) {
+                    WhisperPreferences.setWasActive(context, true);
+                }
             }
         } catch (IdentityMismatchException e) {
             Log.w(TAG, e);
@@ -238,13 +258,14 @@ public class MessageReceiver {
         }
     }
 
-    private TextSecureMessage getPlaintext(TextSecureEnvelope envelope)
+    private TextSecureDataMessage getPlaintext(TextSecureEnvelope envelope)
             throws IdentityMismatchException, InvalidMessageException
     {
         try {
             WPAxolotlStore store = WPAxolotlStore.getInstance(context);
-            TextSecureCipher cipher = new TextSecureCipher(store);
-            return cipher.decrypt(envelope);
+            TextSecureAddress localAddress = new TextSecureAddress(whisperPush.getLocalNumber());
+            TextSecureCipher cipher = new TextSecureCipher(localAddress, store);
+            return cipher.decrypt(envelope).getDataMessage().get();
         } catch (Exception e) {
             if (e instanceof IdentityMismatchException) {
                 throw (IdentityMismatchException)e;
@@ -260,7 +281,7 @@ public class MessageReceiver {
     {
         AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
         List<Pair<String, String>> results = new LinkedList<Pair<String, String>>();
-
+        TextSecureMessageReceiver receiver = getTextSecureReceiver();
         for (TextSecureAttachment attachment : list) {
             InputStream stream = null;
             byte[] attachmentBytes;
@@ -318,6 +339,10 @@ public class MessageReceiver {
         String formatted = PhoneNumberFormatter.formatE164(local, number);
         int type = BlacklistUtils.isListed(context, formatted, BlacklistUtils.BLOCK_MESSAGES);
         return type != BlacklistUtils.MATCH_NONE;
+    }
+
+    public synchronized void reset() {
+        mTextSecureReceiver = null;
     }
 
 }

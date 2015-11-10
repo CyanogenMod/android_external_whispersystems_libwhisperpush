@@ -35,7 +35,9 @@ import org.whispersystems.whisperpush.WhisperPush;
 import org.whispersystems.whisperpush.crypto.IdentityKeyUtil;
 import org.whispersystems.whisperpush.crypto.MasterSecret;
 import org.whispersystems.whisperpush.crypto.MasterSecretUtil;
+import org.whispersystems.whisperpush.crypto.MessagePeer;
 import org.whispersystems.whisperpush.crypto.PreKeyUtil;
+import org.whispersystems.whisperpush.database.DatabaseFactory;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.gcm.GcmHelper;
 import org.whispersystems.whisperpush.sms.IncomingSmsListener;
@@ -284,8 +286,8 @@ public class RegistrationService extends Service {
             setState(new RegistrationState(RegistrationState.STATE_VERIFYING, number));
             String challenge = waitForChallenge();
             registrationTimerHandler.stop();
-            manager.verifyAccount(challenge, signalingKey, false,
-                                  WhisperPreferences.getInstallId(this));
+            manager.verifyAccountWithCode(challenge, signalingKey,
+                                  WhisperPreferences.getInstallId(this), false);
 
             handleCommonRegistration(manager, number);
 
@@ -321,6 +323,8 @@ public class RegistrationService extends Service {
         setState(new RegistrationState(RegistrationState.STATE_GCM_REGISTERING, number));
         String gcmRegistrationId = GcmHelper.getRegistrationId(this);
         manager.setGcmId(Optional.of(gcmRegistrationId));
+        DatabaseFactory.getIdentityDatabase(this).saveIdentity(masterSecret,
+                new MessagePeer(this, number), identityKeyPair.getPublicKey());
 
         Set<String>               eligibleContactNumber = Directory.getInstance(this).getPushEligibleContactNumbers(number);
         List<ContactTokenDetails> activeTokens          = manager.getContacts(eligibleContactNumber);

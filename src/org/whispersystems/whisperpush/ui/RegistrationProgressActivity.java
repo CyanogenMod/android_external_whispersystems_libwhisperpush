@@ -499,8 +499,8 @@ public class RegistrationProgressActivity extends Activity {
                     try {
                         TextSecureAccountManager manager =
                                 WhisperServiceFactory.createAccountManager(getApplicationContext());
-                        manager.verifyAccount(code, signalingKey, false,
-                                WhisperPreferences.getInstallId(getApplicationContext()));
+                        manager.verifyAccountWithCode(code, signalingKey,
+                                WhisperPreferences.getInstallId(getApplicationContext()), true);
                         return SUCCESS;
                     } catch (RateLimitException e) {
                         Log.w("RegistrationProgressActivity", e);
