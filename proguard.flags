@@ -1,0 +1,20 @@
+-keepattributes *Annotation*,EnclosingMethod,Signature
+
+-dontwarn org.whispersystems.**
+-dontwarn com.squareup.**
+-dontwarn com.squareup.okhttp.**
+-dontwarn okio.**
+-dontwarn com.google.**
+-dontwarn com.android.internal.**
+
+-keep class org.whispersystems.curve25519.** { *; }
+-keep class org.whispersystems.textsecure.api.push.* { *; }
+-keep class org.whispersystems.textsecure.internal.push.* { *; }
+-keep class org.whispersystems.textsecure.internal.util.* { *; }
+
+-dontwarn com.fasterxml.**
+-keepnames class com.fasterxml.jackson.** { *; }
+-keep class org.codehaus.** { *; }
+-keepclassmembers public final enum org.codehaus.jackson.annotate.JsonAutoDetect$Visibility {
+    public static final org.codehaus.jackson.annotate.JsonAutoDetect$Visibility *;
+}
