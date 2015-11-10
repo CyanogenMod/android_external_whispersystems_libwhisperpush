@@ -101,7 +101,7 @@
 
         <activity android:name=".ui.PreferenceActivity"
                   android:exported="true"
-                  android:label="@string/pref_activity_title"
+                  android:label="@string/pref_whisperpush_title"
                   android:theme="@style/Theme.WhisperPush.Main"/>
 
         <service android:enabled="true"
