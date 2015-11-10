@@ -129,10 +129,10 @@ public class WhisperPush {
             String authority = messageUri.getAuthority();
             if ("sms".equals(authority)) {
                 values.put(Sms.SUBSCRIPTION_ID, 0);
-                values.put(Sms.PROVIDER, PROVIDER_TEXT_SECURE);
+//                values.put(Sms.PROVIDER, PROVIDER_TEXT_SECURE);
             } else if ("mms".equals(authority)) {
                 values.put(Mms.SUBSCRIPTION_ID, 0);
-                values.put(Mms.PROVIDER, PROVIDER_TEXT_SECURE);
+//                values.put(Mms.PROVIDER, PROVIDER_TEXT_SECURE);
             } else {
                 Log.e(TAG, "Can't mark " + messageUri + " as securely sent. Unsupported authority.");
             }
@@ -147,8 +147,8 @@ public class WhisperPush {
         return false;
     }
 
-    private static final String[] PROJECTION_SMS_PROVIDER = {Sms.PROVIDER};
-    private static final String[] PROJECTION_MMS_PROVIDER = {Mms.PROVIDER};
+    private static final String[] PROJECTION_SMS_PROVIDER = {/*Sms.PROVIDER*/};
+    private static final String[] PROJECTION_MMS_PROVIDER = {/*Mms.PROVIDER*/};
 
     public boolean isMessageSecurelySent(Uri messageUri) {
         String authority = messageUri.getAuthority();

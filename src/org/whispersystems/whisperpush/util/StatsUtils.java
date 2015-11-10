@@ -37,7 +37,7 @@ public class StatsUtils {
 
     public static boolean isStatsCollectionEnabled(Context context) {
         return Settings.Secure.getInt(context.getContentResolver(),
-                Settings.Secure.STATS_COLLECTION, 1) != 0;
+                /*Settings.Secure.STATS_COLLECTION*/"stats_collection", 1) != 0; //FIXME  Use {@link cyanogenmod.providers.CMSettings.Secure#STATS_COLLECTION}
     }
 
     public static boolean isStatsPackageInstalled(Context context) {
