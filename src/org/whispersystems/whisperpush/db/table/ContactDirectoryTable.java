@@ -23,9 +23,6 @@ public class ContactDirectoryTable {
             SESSION_ACTIVE + " INTEGER DEFAULT 0, " +
             TIMESTAMP + " INTEGER);";
 
-    public static final String ALTER_TABLE_ADD_SESSION_ACTIVE = "ALTER TABLE " + TABLE_NAME
-            + " ADD " + SESSION_ACTIVE + " INTEGER DEFAULT 0";
-
     private ContactDirectoryTable() {
     }
 

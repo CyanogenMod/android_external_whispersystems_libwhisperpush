@@ -12,19 +12,19 @@ import org.whispersystems.whisperpush.db.table.ContactDirectoryTable;
 public class WhisperPushDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "whisper_push.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 1;
 
-    private static volatile WhisperPushDbHelper mInstance;
+    private static volatile WhisperPushDbHelper sInstance;
 
     public static WhisperPushDbHelper getInstance(Context context) {
-        if (mInstance == null) {
+        if (sInstance == null) {
             synchronized (WhisperPushDbHelper.class) {
-                if (mInstance == null) {
-                    mInstance = new WhisperPushDbHelper(context.getApplicationContext());
+                if (sInstance == null) {
+                    sInstance = new WhisperPushDbHelper(context.getApplicationContext());
                 }
             }
         }
-        return mInstance;
+        return sInstance;
     }
 
     private WhisperPushDbHelper(Context appContext) {
@@ -41,12 +41,6 @@ public class WhisperPushDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion < 2) {
-            db.execSQL(ContactDirectoryTable.ALTER_TABLE_ADD_SESSION_ACTIVE);
-            CanonicalAddressDatabase.onCreate(db);
-            IdentityDatabase.onCreate(db);
-            PendingApprovalDatabase.onCreate(db);
-        }
     }
 
 }
