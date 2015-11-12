@@ -35,7 +35,6 @@ import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
 import org.whispersystems.textsecure.api.messages.TextSecureGroup;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.push.TextSecureAddress;
-import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
 import org.whispersystems.whisperpush.R;
 import org.whispersystems.whisperpush.WhisperPush;
 import org.whispersystems.whisperpush.api.MessagingBridge;
@@ -58,7 +57,6 @@ import android.provider.Telephony;
 import android.util.Log;
 import android.util.Pair;
 
-import com.android.internal.telephony.util.BlacklistUtils;
 import com.google.android.mms.MmsException;
 import com.google.android.mms.pdu.PduPart;
 import com.google.android.mms.pdu.PduPersister;
@@ -182,9 +180,8 @@ public class MessageReceiver {
                 } else if (attach.isPresent()) {
                     handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
                 } else {
-                    Uri messageUri = messagingBridge
-                            .storeIncomingTextMessage(0, source, textBody, timestamp, false, true);
-                    whisperPush.markMessageAsSecurelySent(messageUri);
+                    messagingBridge
+                            .storeIncomingTextMessage(source, textBody, timestamp, false, true);
                 }
 
                 if (StatsUtils.isStatsActive(context)) {
@@ -219,10 +216,10 @@ public class MessageReceiver {
             }
             members.remove(WhisperPush.getInstance(context).getLocalNumber());
             members.add(source);
-            messagingBridge.updateMessageGroup(textSecureGroup.getGroupId(), members);
+            messagingBridge.updateGroupMembers(textSecureGroup.getGroupId(), members);
         } else if (type == TextSecureGroup.Type.DELIVER) {
             try {
-                long threadId = messagingBridge.getThreadId(groupId);
+                long threadId = messagingBridge.getGroupThreadId(groupId);
                 List<Pair<String, String>> attachments;
                 if (attach.isPresent()) {
                     attachments = retrieveAttachments(threadId, attach.get());
@@ -230,7 +227,7 @@ public class MessageReceiver {
                     attachments = Collections.EMPTY_LIST;
                 }
                 messagingBridge.storeIncomingGroupMessage(
-                        source, textBody, attachments, timestamp, true, threadId);
+                        source, textBody, attachments, timestamp, threadId, true);
             } catch (IOException e) {
                 Log.w(TAG, e);
                 Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
@@ -238,7 +235,7 @@ public class MessageReceiver {
                         context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
             }
         } else if (type == TextSecureGroup.Type.QUIT) {
-            messagingBridge.quitUserFromMessageGroup(groupId, source);
+            messagingBridge.quitMemberFromGroup(groupId, source);
         }
     }
 
@@ -335,10 +332,8 @@ public class MessageReceiver {
     }
 
     private boolean isNumberBlackListed(String number) {
-        String local     = WhisperPreferences.getLocalNumber(context);
-        String formatted = PhoneNumberFormatter.formatE164(local, number);
-        int type = BlacklistUtils.isListed(context, formatted, BlacklistUtils.BLOCK_MESSAGES);
-        return type != BlacklistUtils.MATCH_NONE;
+        return whisperPush.getMessagingBridge()
+                .isAddressBlacklisted(number);
     }
 
     public synchronized void reset() {
