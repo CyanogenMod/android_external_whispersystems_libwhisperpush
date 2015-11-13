@@ -19,7 +19,9 @@ package org.whispersystems.whisperpush.service;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.android.mms.ContentType;
 import com.google.android.mms.MmsException;
@@ -45,16 +47,19 @@ import org.whispersystems.whisperpush.util.Util;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 public class WhisperPushMessageSender {
 
-    private static final String TAG = "WPMessageSender";
+    private static final String TAG = "WhisperPushMessageSender";
 
     private final Context context;
     private final WhisperPush whisperPush;
@@ -125,6 +130,71 @@ public class WhisperPushMessageSender {
     public void sendGroupMessage(SendReq message, List<TextSecureAttachment> attachments, byte[] id)
             throws MmsException, UntrustedIdentityException {
         send(message, attachments, new TextSecureGroup(id));
+    }
+
+    public void sendMultimediaMessage(List<String> recipients,
+                                      List<Pair<String, Uri>> attachments,
+                                      String body)
+            throws UntrustedIdentityException, EncapsulatedExceptions,
+            IOException, InvalidNumberException {
+        TextSecureMessageSender messageSender = WhisperServiceFactory.createMessageSender(context);
+        List<TextSecureAttachment> convertedAttachments = convertAttachments(attachments);
+        List<TextSecureAddress> convertedRecipients = convertRecipients(recipients);
+
+        try {
+            TextSecureDataMessage.Builder builder = TextSecureDataMessage.newBuilder()
+                    .withBody(body)
+                    .withAttachments(convertedAttachments);
+
+            messageSender.sendMessage(convertedRecipients, builder.build());
+        } catch (IOException e) {
+            Log.w(TAG, e);
+            throw e;
+        } catch (EncapsulatedExceptions eex) {
+            Log.w(TAG, eex);
+            throw eex;
+        }
+
+    }
+
+    private List<TextSecureAttachment> convertAttachments(List<Pair<String, Uri>> attachments)
+            throws IOException {
+        List<TextSecureAttachment> convertedAttachments = new LinkedList<>();
+
+        for (Pair<String, Uri> attachment : attachments) {
+            try {
+                InputStream stream = context.getContentResolver().openInputStream(attachment.second);
+                convertedAttachments.add(TextSecureAttachment.newStreamBuilder()
+                        .withStream(stream)
+                        .withContentType(attachment.first)
+                        .withLength((long) stream.available())
+                        .build());
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, "Attachment retrieving failed", e);
+            }
+        }
+
+        return convertedAttachments;
+    }
+
+    private List<TextSecureAddress> convertRecipients(List<String> recipients)
+            throws InvalidNumberException, IOException {
+        List<TextSecureAddress> secureRecipients = new ArrayList<>(recipients.size());
+        for (String recipient : recipients) {
+            String e164number;
+            try {
+                e164number = whisperPush.formatNumber(recipient);
+            } catch (InvalidNumberException e) {
+                Log.w(TAG, e);
+                throw e;
+            }
+            boolean recipientSupportsSecureMessaging = whisperPush.isRecipientSupportsSecureMessaging(e164number, true);
+            if (!recipientSupportsSecureMessaging) {
+                throw new IOException("Recipient " + e164number + " doesn't support secure messaging");
+            }
+            secureRecipients.add(new TextSecureAddress(e164number));
+        }
+        return secureRecipients;
     }
 
     private void send(SendReq message, List<TextSecureAttachment> attachments, TextSecureGroup textSecureGroup)
