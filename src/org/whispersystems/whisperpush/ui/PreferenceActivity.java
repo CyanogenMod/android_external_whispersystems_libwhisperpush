@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureAccountManager;
+import org.whispersystems.textsecure.api.push.exceptions.AuthorizationFailedException;
 import org.whispersystems.whisperpush.R;
 import org.whispersystems.whisperpush.WhisperPush;
 import org.whispersystems.whisperpush.service.DirectoryRefreshService;
@@ -211,10 +212,17 @@ public class PreferenceActivity extends Activity {
                             WhisperServiceFactory.createAccountManager(context);
                     try {
                         manager.setGcmId(Optional.<String>absent()); // unregister
-                        GoogleCloudMessaging.getInstance(context).unregister();
+                    } catch (AuthorizationFailedException e) {
+                        Log.w(TAG, e);
                     } catch (IOException e) {
                         Log.w(TAG, e);
                         return false;
+                    }
+
+                    try {
+                        GoogleCloudMessaging.getInstance(context).unregister();
+                    } catch (IOException e) {
+                        Log.w(TAG, e);
                     }
                     WhisperPreferences.setRegistered(context, false);
                     return true;

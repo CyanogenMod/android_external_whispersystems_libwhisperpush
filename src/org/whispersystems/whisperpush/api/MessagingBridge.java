@@ -1,6 +1,5 @@
 package org.whispersystems.whisperpush.api;
 
-import android.net.Uri;
 import android.util.Pair;
 
 import java.util.Collection;
@@ -8,20 +7,23 @@ import java.util.List;
 
 public interface MessagingBridge {
 
-    Uri storeIncomingTextMessage(int subId, String sender,
-                                 String message, long timestampSent, boolean read, boolean showNotification);
+    boolean isAddressBlacklisted(String address);
 
-    void storeIncomingMultimediaMessage(String sender, String message, List<Pair<String, String>> attachments,
-                                        long sentTimestamp, boolean showNotification);
+    void storeIncomingTextMessage(String sender, String message,
+                                 long sentAt, boolean read, boolean showNotification);
 
-    void storeIncomingGroupMessage(String sender, String message, List<Pair<String, String>> attachments,
-                                   long sentTimestamp, boolean showNotification,
-                                   long threadId);
+    void storeIncomingMultimediaMessage(String sender, String message,
+                                        List<Pair<String, String>> attachments,
+                                        long sentAt, boolean showNotification);
 
-    void updateMessageGroup(byte[] groupId, Collection<String> members);
+    void storeIncomingGroupMessage(String sender, String message,
+                                   List<Pair<String, String>> attachments,
+                                   long sentAt, long threadId, boolean showNotification);
 
-    void quitUserFromMessageGroup(byte[] groupId, String member);
+    void updateGroupMembers(byte[] groupId, Collection<String> members);
 
-    long getThreadId(byte[] groupId);
+    void quitMemberFromGroup(byte[] groupId, String member);
+
+    long getGroupThreadId(byte[] groupId);
 
 }
