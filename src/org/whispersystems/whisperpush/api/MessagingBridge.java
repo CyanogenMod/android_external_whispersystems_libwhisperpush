@@ -14,7 +14,7 @@ public interface MessagingBridge {
 
     void storeIncomingMultimediaMessage(String sender, String message,
                                         List<Pair<byte[], byte[]>> attachments,
-                                        long sentAt, boolean showNotification);
+                                        long sentAt);
 
     void storeIncomingGroupMessage(String sender, String message,
                                    List<Pair<String, String>> attachments,
