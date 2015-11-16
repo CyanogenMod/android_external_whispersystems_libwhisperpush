@@ -244,7 +244,7 @@ public class MessageReceiver {
                                          String textBody, long timestamp) {
         try {
             List<Pair<byte[], byte[]>> attachments = retrieveAttachmentsBytes(attach.get());
-            messagingBridge.storeIncomingMultimediaMessage(source, textBody, attachments, timestamp, true);
+            messagingBridge.storeIncomingMultimediaMessage(source, textBody, attachments, timestamp);
         } catch (Throwable e) {
             Log.w(TAG, e);
             Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
