@@ -49,9 +49,6 @@ public class WhisperPush {
 
     private static final String TAG = WhisperPush.class.getSimpleName();
 
-    public static final String PROVIDER_DEFAULT = "default";
-    public static final String PROVIDER_TEXT_SECURE = "org.whispersystems.textsecure";
-
     private static final long MILLIS_PER_HOUR = 60L * 60L * 1000L;
     private static final long MILLIS_PER_DAY = 24L * MILLIS_PER_HOUR;
     private static final long UPDATE_INTERVAL = 7L * MILLIS_PER_DAY;
@@ -65,7 +62,6 @@ public class WhisperPush {
     private final Context mContext;
     private final WhisperPreferences mPreferences;
     private final Directory mContactDirectory;
-    private final ContentResolver mContentResolver;
     private volatile WhisperPushMessageSender mMessageSender;
 
     private static boolean visible = false;
@@ -85,7 +81,6 @@ public class WhisperPush {
         mContext = appContext;
         mPreferences = WhisperPreferences.getInstance(appContext);
         mContactDirectory = Directory.getInstance(appContext);
-        mContentResolver = appContext.getContentResolver();
         onCreate();
     }
 
@@ -114,61 +109,6 @@ public class WhisperPush {
             }
         }
         return mMessageSender;
-    }
-
-    public boolean isProviderSecure(String providerId) {
-        if (providerId == null) {
-            return false;
-        }
-        return providerId.equals(PROVIDER_TEXT_SECURE);
-    }
-
-    public boolean markMessageAsSecurelySent(Uri messageUri) {
-        try {
-            ContentValues values = new ContentValues(2);
-            String authority = messageUri.getAuthority();
-            if ("sms".equals(authority)) {
-                values.put(Sms.SUBSCRIPTION_ID, 0);
-//                values.put(Sms.PROVIDER, PROVIDER_TEXT_SECURE);
-            } else if ("mms".equals(authority)) {
-                values.put(Mms.SUBSCRIPTION_ID, 0);
-//                values.put(Mms.PROVIDER, PROVIDER_TEXT_SECURE);
-            } else {
-                Log.e(TAG, "Can't mark " + messageUri + " as securely sent. Unsupported authority.");
-            }
-            if (mContentResolver.update(messageUri, values, null, null) == 1) {
-                return true;
-            } else {
-                Log.e(TAG, "Can't mark " + messageUri + " as securely sent");
-            }
-        } catch (SQLiteException e) {
-            Log.e(TAG, "Catch a SQLiteException when update: ", e);
-        }
-        return false;
-    }
-
-    private static final String[] PROJECTION_SMS_PROVIDER = {/*Sms.PROVIDER*/};
-    private static final String[] PROJECTION_MMS_PROVIDER = {/*Mms.PROVIDER*/};
-
-    public boolean isMessageSecurelySent(Uri messageUri) {
-        String authority = messageUri.getAuthority();
-        String[] projection;
-        if ("sms".equals(authority)) {
-            projection = PROJECTION_SMS_PROVIDER;
-        } else if ("mms".equals(authority)) {
-            projection = PROJECTION_MMS_PROVIDER;
-        } else {
-            return false;
-        }
-        Cursor cursor = mContentResolver.query(messageUri, projection, null, null, null);
-        try {
-            if (cursor.moveToFirst()) {
-                return isProviderSecure(cursor.getString(0));
-            }
-        } finally {
-            cursor.close();
-        }
-        return false;
     }
 
     public Directory getContactDirectory() {
