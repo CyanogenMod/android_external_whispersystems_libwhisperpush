@@ -17,8 +17,6 @@
 package org.whispersystems.whisperpush.database;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
 import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
 
@@ -30,6 +28,7 @@ public class DatabaseFactory {
     private final CanonicalAddressDatabase addressDatabase;
     private final IdentityDatabase         identityDatabase;
     private final PendingApprovalDatabase  pendingApprovalDatabase;
+    private final GroupDatabase            groupDatabase;
 
     public synchronized static DatabaseFactory getInstance(Context context) {
         if (instance == null)
@@ -44,6 +43,7 @@ public class DatabaseFactory {
         this.identityDatabase        = new IdentityDatabase(context, databaseHelper);
         this.addressDatabase         = new CanonicalAddressDatabase(databaseHelper);
         this.pendingApprovalDatabase = new PendingApprovalDatabase(context, databaseHelper);
+        this.groupDatabase           = new GroupDatabase(context, databaseHelper);
     }
 
     public static CanonicalAddressDatabase getAddressDatabase(Context context) {
@@ -56,6 +56,10 @@ public class DatabaseFactory {
 
     public static PendingApprovalDatabase getPendingApprovalDatabase(Context context) {
         return getInstance(context).pendingApprovalDatabase;
+    }
+
+    public static GroupDatabase getGroupDatabase(Context context) {
+        return getInstance(context).groupDatabase;
     }
 
 }
