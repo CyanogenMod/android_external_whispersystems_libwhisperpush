@@ -13,8 +13,8 @@ public interface MessagingBridge {
                                  long sentAt, boolean read, boolean showNotification);
 
     void storeIncomingMultimediaMessage(String sender, String message,
-                                        List<Pair<String, String>> attachments,
-                                        long sentAt, boolean showNotification);
+                                        List<Pair<byte[], byte[]>> attachments,
+                                        long sentAt);
 
     void storeIncomingGroupMessage(String sender, String message,
                                    List<Pair<String, String>> attachments,

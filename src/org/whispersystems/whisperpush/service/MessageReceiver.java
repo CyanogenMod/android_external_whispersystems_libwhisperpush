@@ -241,13 +241,11 @@ public class MessageReceiver {
 
     private void handleMultimediaMessage(MessagingBridge messagingBridge, String source,
                                          Optional<List<TextSecureAttachment>> attach,
-                                         String textBody, long timestamp)
-            throws InvalidMessageException {
+                                         String textBody, long timestamp) {
         try {
-            long threadId = Telephony.Threads.getOrCreateThreadId(context, source);
-            List<Pair<String, String>> attachments = retrieveAttachments(threadId, attach.get());
-            messagingBridge.storeIncomingMultimediaMessage(source, textBody, attachments, timestamp, true);
-        } catch (IOException e) {
+            List<Pair<byte[], byte[]>> attachments = retrieveAttachmentsBytes(attach.get());
+            messagingBridge.storeIncomingMultimediaMessage(source, textBody, attachments, timestamp);
+        } catch (Throwable e) {
             Log.w(TAG, e);
             Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
             MessageNotifier.notifyProblem(context, contact,
@@ -306,6 +304,35 @@ public class MessageReceiver {
             } catch (MmsException e) {
                 Log.e(TAG, "Cannot persist attachment", e);
             }
+        }
+
+        return results;
+    }
+
+    private List<Pair<byte[], byte[]>> retrieveAttachmentsBytes(List<TextSecureAttachment> list)
+            throws IOException, InvalidMessageException
+    {
+        AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
+        List<Pair<byte[], byte[]>> results = new LinkedList<>();
+        TextSecureMessageReceiver receiver = getTextSecureReceiver();
+        for (TextSecureAttachment attachment : list) {
+            InputStream stream = null;
+            byte[] attachmentBytes;
+
+            try {
+                if (attachment instanceof TextSecureAttachmentPointer) {
+                    stream = attachmentManager.store((TextSecureAttachmentPointer) attachment, receiver);
+                } else {
+                    stream = attachment.asStream().getInputStream();
+                }
+                attachmentBytes = Util.readBytes(stream);
+            } finally {
+                if (stream != null) {
+                    stream.close();
+                }
+            }
+
+            results.add(new Pair<>(Util.toIsoBytes(attachment.getContentType()), attachmentBytes));
         }
 
         return results;
