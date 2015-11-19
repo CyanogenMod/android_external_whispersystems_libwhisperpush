@@ -37,12 +37,14 @@ import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.push.TextSecureAddress;
 import org.whispersystems.whisperpush.R;
 import org.whispersystems.whisperpush.WhisperPush;
+import org.whispersystems.whisperpush.api.MessageGroup;
 import org.whispersystems.whisperpush.api.MessagingBridge;
 import org.whispersystems.whisperpush.attachments.AttachmentManager;
 import org.whispersystems.whisperpush.contacts.Contact;
 import org.whispersystems.whisperpush.contacts.ContactsFactory;
 import org.whispersystems.whisperpush.crypto.IdentityMismatchException;
 import org.whispersystems.whisperpush.database.DatabaseFactory;
+import org.whispersystems.whisperpush.database.GroupDatabase;
 import org.whispersystems.whisperpush.database.WPAxolotlStore;
 import org.whispersystems.whisperpush.directory.Directory;
 import org.whispersystems.whisperpush.directory.NotInDirectoryException;
@@ -53,7 +55,6 @@ import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
 import android.content.Context;
 import android.net.Uri;
-import android.provider.Telephony;
 import android.util.Log;
 import android.util.Pair;
 
@@ -180,8 +181,7 @@ public class MessageReceiver {
                 } else if (attach.isPresent()) {
                     handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
                 } else {
-                    messagingBridge
-                            .storeIncomingTextMessage(source, textBody, timestamp, false, true);
+                    messagingBridge.storeIncomingTextMessage(source, textBody, timestamp, false);
                 }
 
                 if (StatsUtils.isStatsActive(context)) {
@@ -206,8 +206,9 @@ public class MessageReceiver {
                                     String textBody, long timestamp)
             throws InvalidMessageException {
         TextSecureGroup textSecureGroup = textSecureGroupOptional.get();
-        byte[] groupId = textSecureGroup.getGroupId();
+        String groupId = MessageGroup.toStringId(textSecureGroup.getGroupId());
         TextSecureGroup.Type type = textSecureGroup.getType();
+        GroupDatabase groupDatabase = DatabaseFactory.getGroupDatabase(context);
 
         if (type == TextSecureGroup.Type.UPDATE) {
             Set<String> members = new HashSet<>();
@@ -216,18 +217,21 @@ public class MessageReceiver {
             }
             members.remove(WhisperPush.getInstance(context).getLocalNumber());
             members.add(source);
-            messagingBridge.updateGroupMembers(textSecureGroup.getGroupId(), members);
+            groupDatabase.createOrUpdate(new MessageGroup(
+                    groupId,
+                    messagingBridge.getThreadId(members)
+            ));
         } else if (type == TextSecureGroup.Type.DELIVER) {
             try {
-                long threadId = messagingBridge.getGroupThreadId(groupId);
-                List<Pair<String, String>> attachments;
+                long threadId = groupDatabase.getThreadId(groupId);
+                List<Pair<byte[], byte[]>> attachments;
                 if (attach.isPresent()) {
-                    attachments = retrieveAttachments(threadId, attach.get());
+                    attachments = retrieveAttachmentsBytes(attach.get());
                 } else {
                     attachments = Collections.EMPTY_LIST;
                 }
                 messagingBridge.storeIncomingGroupMessage(
-                        source, textBody, attachments, timestamp, threadId, true);
+                        source, textBody, attachments, timestamp, threadId);
             } catch (IOException e) {
                 Log.w(TAG, e);
                 Contact contact = ContactsFactory.getContactFromNumber(context, source, false);
@@ -235,7 +239,15 @@ public class MessageReceiver {
                         context.getString(R.string.MessageReceiver_unable_to_retrieve_encrypted_attachment_for_incoming_message));
             }
         } else if (type == TextSecureGroup.Type.QUIT) {
-            messagingBridge.quitMemberFromGroup(groupId, source);
+            long threadId = groupDatabase.getThreadId(groupId);
+            Set<String> recipients = messagingBridge.getRecipientsByThread(threadId);
+            recipients.remove(source);
+            long newThreadId = messagingBridge.getThreadId(recipients);
+            if (newThreadId == -1) {
+                groupDatabase.remove(groupId);
+            } else if (newThreadId != threadId) {
+                groupDatabase.createOrUpdate(new MessageGroup(groupId, newThreadId));
+            }
         }
     }
 

@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 
@@ -41,7 +42,11 @@ import org.whispersystems.textsecure.api.push.exceptions.EncapsulatedExceptions;
 import org.whispersystems.textsecure.api.push.exceptions.UnregisteredUserException;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.whisperpush.WhisperPush;
+import org.whispersystems.whisperpush.api.MessageGroup;
+import org.whispersystems.whisperpush.api.MessagingBridge;
 import org.whispersystems.whisperpush.api.OutgoingMessage;
+import org.whispersystems.whisperpush.database.DatabaseFactory;
+import org.whispersystems.whisperpush.database.GroupDatabase;
 import org.whispersystems.whisperpush.util.StatsUtils;
 import org.whispersystems.whisperpush.util.Util;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
@@ -54,6 +59,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -122,16 +128,6 @@ public class WhisperPushMessageSender {
         return false;
     }
 
-    public void sendMultimediaMessage(SendReq message, List<TextSecureAttachment> attachments)
-            throws MmsException, UntrustedIdentityException {
-        send(message, attachments, null);
-    }
-
-    public void sendGroupMessage(SendReq message, List<TextSecureAttachment> attachments, byte[] id)
-            throws MmsException, UntrustedIdentityException {
-        send(message, attachments, new TextSecureGroup(id));
-    }
-
     public void sendMultimediaMessage(List<String> recipients,
                                       List<Pair<String, Uri>> attachments,
                                       String body)
@@ -141,11 +137,39 @@ public class WhisperPushMessageSender {
         List<TextSecureAttachment> convertedAttachments = convertAttachments(attachments);
         List<TextSecureAddress> convertedRecipients = convertRecipients(recipients);
 
-        try {
-            TextSecureDataMessage.Builder builder = TextSecureDataMessage.newBuilder()
-                    .withBody(body)
-                    .withAttachments(convertedAttachments);
+        TextSecureDataMessage.Builder builder = TextSecureDataMessage.newBuilder()
+                .withBody(body)
+                .withAttachments(convertedAttachments);
 
+        if (recipients.size() > 0) {
+            TextSecureGroup textSecureGroup;
+            MessagingBridge messagingBridge = whisperPush.getMessagingBridge();
+            long threadId = messagingBridge.getThreadId(new HashSet<>(recipients));
+            GroupDatabase groupDatabase = DatabaseFactory.getGroupDatabase(context);
+            String groupId = groupDatabase.getGroupId(threadId);
+            List<String> members = new ArrayList<>(recipients);
+            members.add(whisperPush.getLocalNumber());
+            if (TextUtils.isEmpty(groupId)) {
+                MessageGroup group = MessageGroup.createNew(threadId);
+                groupDatabase.createOrUpdate(group);
+                groupId = group.getGroupId();
+                try {
+                    sendGroupUpdate(group.getGroupIdBytes(), members);
+                } catch (EncapsulatedExceptions eex) {
+                    Log.w(TAG, eex);
+                    throw new IOException(eex);
+                }
+
+            }
+            textSecureGroup = TextSecureGroup.newBuilder(TextSecureGroup.Type.DELIVER).
+                    withId(Util.toIsoBytes(groupId)).
+                    withMembers(members).
+                    build();
+
+            builder.asGroupMessage(textSecureGroup);
+        }
+
+        try {
             messageSender.sendMessage(convertedRecipients, builder.build());
         } catch (IOException e) {
             Log.w(TAG, e);
@@ -154,7 +178,6 @@ public class WhisperPushMessageSender {
             Log.w(TAG, eex);
             throw eex;
         }
-
     }
 
     private List<TextSecureAttachment> convertAttachments(List<Pair<String, Uri>> attachments)
@@ -223,7 +246,7 @@ public class WhisperPushMessageSender {
     }
 
     public void sendGroupUpdate(byte[] id, Collection<String> members)
-            throws MmsException, UntrustedIdentityException {
+            throws UntrustedIdentityException, InvalidNumberException, EncapsulatedExceptions, IOException {
         TextSecureMessageSender messageSender = WhisperServiceFactory.createMessageSender(context);
         List<TextSecureAddress> recipients = new ArrayList<>(members.size());
 
@@ -233,7 +256,7 @@ public class WhisperPushMessageSender {
                 e164number = whisperPush.formatNumber(destination);
             } catch (InvalidNumberException e) {
                 Log.w(TAG, e);
-                throw new MmsException(e);
+                throw e;
             }
             recipients.add(new TextSecureAddress(e164number));
         }
@@ -251,10 +274,10 @@ public class WhisperPushMessageSender {
 
         } catch (IOException e) {
             Log.w(TAG, e);
-            throw new MmsException(e);
+            throw e;
         } catch (EncapsulatedExceptions eex) {
             Log.w(TAG, eex);
-            throw new MmsException(eex);
+            throw eex;
         }
     }
 

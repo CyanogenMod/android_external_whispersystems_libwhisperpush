@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import org.whispersystems.whisperpush.database.CanonicalAddressDatabase;
+import org.whispersystems.whisperpush.database.GroupDatabase;
 import org.whispersystems.whisperpush.database.IdentityDatabase;
 import org.whispersystems.whisperpush.database.PendingApprovalDatabase;
 import org.whispersystems.whisperpush.db.table.ContactDirectoryTable;
@@ -12,7 +13,7 @@ import org.whispersystems.whisperpush.db.table.ContactDirectoryTable;
 public class WhisperPushDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "whisper_push.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     private static volatile WhisperPushDbHelper sInstance;
 
@@ -37,10 +38,14 @@ public class WhisperPushDbHelper extends SQLiteOpenHelper {
         CanonicalAddressDatabase.onCreate(db);
         IdentityDatabase.onCreate(db);
         PendingApprovalDatabase.onCreate(db);
+        GroupDatabase.onCreate(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 2) {
+            GroupDatabase.onCreate(db);
+        }
     }
 
 }

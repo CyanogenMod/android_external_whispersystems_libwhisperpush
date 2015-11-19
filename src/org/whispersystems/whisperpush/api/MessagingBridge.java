@@ -4,26 +4,25 @@ import android.util.Pair;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public interface MessagingBridge {
 
     boolean isAddressBlacklisted(String address);
 
     void storeIncomingTextMessage(String sender, String message,
-                                 long sentAt, boolean read, boolean showNotification);
+                                 long sentAt, boolean read);
 
     void storeIncomingMultimediaMessage(String sender, String message,
                                         List<Pair<byte[], byte[]>> attachments,
                                         long sentAt);
 
     void storeIncomingGroupMessage(String sender, String message,
-                                   List<Pair<String, String>> attachments,
-                                   long sentAt, long threadId, boolean showNotification);
+                                   List<Pair<byte[], byte[]>> attachments,
+                                   long sentAt, long threadId);
 
-    void updateGroupMembers(byte[] groupId, Collection<String> members);
+    long getThreadId(Set<String> recipients);
 
-    void quitMemberFromGroup(byte[] groupId, String member);
-
-    long getGroupThreadId(byte[] groupId);
+    Set<String> getRecipientsByThread(final long threadId);
 
 }
