@@ -181,8 +181,7 @@ public class MessageReceiver {
                 } else if (attach.isPresent()) {
                     handleMultimediaMessage(messagingBridge, source, attach, textBody, timestamp);
                 } else {
-                    messagingBridge
-                            .storeIncomingTextMessage(source, textBody, timestamp, false, true);
+                    messagingBridge.storeIncomingTextMessage(source, textBody, timestamp, false);
                 }
 
                 if (StatsUtils.isStatsActive(context)) {

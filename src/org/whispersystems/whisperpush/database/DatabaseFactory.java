@@ -43,7 +43,7 @@ public class DatabaseFactory {
         this.identityDatabase        = new IdentityDatabase(context, databaseHelper);
         this.addressDatabase         = new CanonicalAddressDatabase(databaseHelper);
         this.pendingApprovalDatabase = new PendingApprovalDatabase(context, databaseHelper);
-        this.groupDatabase           = new GroupDatabase(context, databaseHelper);
+        this.groupDatabase           = new GroupDatabase(databaseHelper);
     }
 
     public static CanonicalAddressDatabase getAddressDatabase(Context context) {

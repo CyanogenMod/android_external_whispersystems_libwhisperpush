@@ -1,7 +1,6 @@
 package org.whispersystems.whisperpush.database;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -10,7 +9,7 @@ import org.whispersystems.whisperpush.api.MessageGroup;
 
 public class GroupDatabase {
 
-    private static final String TABLE_NAME = "group";
+    private static final String TABLE_NAME = "message_groups";
 
     public static final String ID = "_id";
     public static final String GROUP_ID = "group_id";
@@ -22,17 +21,15 @@ public class GroupDatabase {
                     GROUP_ID + " TEXT UNIQUE, " +
                     THREAD_ID + " INTEGER);";
 
-    private final Context context;
     private final SQLiteDatabase database;
 
-    public GroupDatabase(Context context, SQLiteOpenHelper databaseHelper) {
-        this.context = context;
+    public GroupDatabase(SQLiteOpenHelper databaseHelper) {
         this.database = databaseHelper.getWritableDatabase();
     }
 
     public void createOrUpdate(MessageGroup messageGroup) {
         ContentValues contentValues = new ContentValues();
-        contentValues.put(GROUP_ID, messageGroup.getThreadId());
+        contentValues.put(GROUP_ID, messageGroup.getGroupId());
         contentValues.put(THREAD_ID, messageGroup.getThreadId());
 
         database.insertWithOnConflict(TABLE_NAME, null,
@@ -78,6 +75,7 @@ public class GroupDatabase {
                 new String[] { groupId } );
     }
 
-
-
+    public static void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_TABLE);
+    }
 }
