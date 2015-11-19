@@ -45,7 +45,11 @@ public class MessageGroup {
         }
     }
 
-    public static byte[] generateGroupId() {
+    public static MessageGroup createNew(long threadId) {
+        return new MessageGroup(generateGroupId(), threadId);
+    }
+
+    private static byte[] generateGroupId() {
         try {
             byte[] groupId = new byte[16];
             SecureRandom.getInstance("SHA1PRNG").nextBytes(groupId);
