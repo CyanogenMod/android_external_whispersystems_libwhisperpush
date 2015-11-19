@@ -31,15 +31,10 @@ import org.whispersystems.whisperpush.service.WhisperPushMessageSender;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
 import org.whispersystems.whisperpush.util.WhisperServiceFactory;
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteException;
-import android.net.Uri;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.provider.Telephony.Mms;
-import android.provider.Telephony.Sms;
 import android.util.Log;
 
 import static org.whispersystems.whisperpush.util.Util.isEmpty;
@@ -62,6 +57,7 @@ public class WhisperPush {
     private final Context mContext;
     private final WhisperPreferences mPreferences;
     private final Directory mContactDirectory;
+    private final ConnectivityManager mConnectivityManager;
     private volatile WhisperPushMessageSender mMessageSender;
 
     private static boolean visible = false;
@@ -81,6 +77,7 @@ public class WhisperPush {
         mContext = appContext;
         mPreferences = WhisperPreferences.getInstance(appContext);
         mContactDirectory = Directory.getInstance(appContext);
+        mConnectivityManager = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         onCreate();
     }
 
@@ -125,6 +122,15 @@ public class WhisperPush {
 
     public boolean isSecureMessagingActive() {
         return mPreferences.isRegistered();
+    }
+
+    public boolean isSecureMessagingNetworkAvailable() {
+        return isSecureMessagingActive() && isNetworkConnected();
+    }
+
+    private boolean isNetworkConnected() {
+        NetworkInfo activeNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     public boolean isRecipientSupportsSecureMessaging(String number, boolean allowAskServer) {
