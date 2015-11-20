@@ -31,7 +31,6 @@ import com.google.android.mms.pdu.EncodedStringValue;
 import com.google.android.mms.pdu.PduBody;
 import com.google.android.mms.pdu.SendReq;
 
-import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureMessageSender;
 import org.whispersystems.textsecure.api.crypto.UntrustedIdentityException;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachment;
@@ -47,6 +46,8 @@ import org.whispersystems.whisperpush.api.MessagingBridge;
 import org.whispersystems.whisperpush.api.OutgoingMessage;
 import org.whispersystems.whisperpush.database.DatabaseFactory;
 import org.whispersystems.whisperpush.database.GroupDatabase;
+import org.whispersystems.whisperpush.database.WPAxolotlStore;
+import org.whispersystems.whisperpush.database.WPIdentityKeyStore;
 import org.whispersystems.whisperpush.util.StatsUtils;
 import org.whispersystems.whisperpush.util.Util;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
@@ -88,6 +89,22 @@ public class WhisperPushMessageSender {
         this.whisperPush = WhisperPush.getInstance(context);
     }
 
+    private void checkAndHandleIdentityChange(EncapsulatedExceptions e) {
+        for (UntrustedIdentityException ex : e.getUntrustedIdentityExceptions()) {
+            checkAndHandleIdentityChange(ex);
+        }
+    }
+
+    private void checkAndHandleIdentityChange(Throwable e) {
+        if (e instanceof UntrustedIdentityException) {
+            UntrustedIdentityException ex = ((UntrustedIdentityException) e);
+            String number = ex.getE164Number();
+            MessageNotifier.notifyIdentityChanged(context, number);
+            WPIdentityKeyStore identityKeyStore = WPAxolotlStore.getInstance(context).getIdentityKeyStore();
+            identityKeyStore.deleteIdentity(number);
+        }
+    }
+
     public boolean sendTextMessage(OutgoingMessage message) {
         Log.d(TAG, "Got outgoing message");
 
@@ -123,6 +140,7 @@ public class WhisperPushMessageSender {
             throw ex;
         } catch (Throwable e) {
             Log.w(TAG, e);
+            checkAndHandleIdentityChange(e);
             abortSendOperation(message, e);
         }
         return false;
@@ -176,6 +194,7 @@ public class WhisperPushMessageSender {
             throw e;
         } catch (EncapsulatedExceptions eex) {
             Log.w(TAG, eex);
+            checkAndHandleIdentityChange(eex);
             throw eex;
         }
     }
@@ -240,6 +259,7 @@ public class WhisperPushMessageSender {
             throw new MmsException(e);
         } catch (EncapsulatedExceptions eex) {
             Log.w(TAG, eex);
+            checkAndHandleIdentityChange(eex);
             throw new MmsException(eex);
         }
 
@@ -277,6 +297,7 @@ public class WhisperPushMessageSender {
             throw e;
         } catch (EncapsulatedExceptions eex) {
             Log.w(TAG, eex);
+            checkAndHandleIdentityChange(eex);
             throw eex;
         }
     }

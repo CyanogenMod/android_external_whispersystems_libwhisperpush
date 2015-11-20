@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.whispersystems.libaxolotl.InvalidMessageException;
+import org.whispersystems.libaxolotl.UntrustedIdentityException;
 import org.whispersystems.libaxolotl.util.guava.Optional;
 import org.whispersystems.textsecure.api.TextSecureMessageReceiver;
 import org.whispersystems.textsecure.api.crypto.TextSecureCipher;
@@ -275,11 +276,14 @@ public class MessageReceiver {
             return cipher.decrypt(envelope).getDataMessage().get();
         } catch (Exception e) {
             if (e instanceof IdentityMismatchException) {
-                throw (IdentityMismatchException)e;
-            } else {
-                // FIXME: not the best error handling approach?
-                throw new InvalidMessageException(e.getMessage(), e);
+                throw (IdentityMismatchException) e;
             }
+            if (e instanceof org.whispersystems.libaxolotl.UntrustedIdentityException
+                    || e instanceof org.whispersystems.textsecure.api.crypto.UntrustedIdentityException) {
+                throw new IdentityMismatchException(e.getMessage(), e);
+            }
+            // FIXME: not the best error handling approach?
+            throw new InvalidMessageException(e.getMessage(), e);
         }
     }
 

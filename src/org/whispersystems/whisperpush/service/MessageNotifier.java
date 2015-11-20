@@ -19,6 +19,8 @@ package org.whispersystems.whisperpush.service;
 import java.util.Date;
 
 import android.app.Activity;
+
+import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.InvalidMessageException;
 import org.whispersystems.libaxolotl.InvalidVersionException;
 import org.whispersystems.libaxolotl.protocol.PreKeyWhisperMessage;
@@ -43,6 +45,8 @@ import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
+
+import static android.graphics.BitmapFactory.decodeResource;
 
 public class MessageNotifier {
 
@@ -112,6 +116,34 @@ public class MessageNotifier {
                 R.string.MessageNotifier_user_received_message_from_blacklisted_number_content), number)).build();
 
         ((NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE))
+                .notify(PROBLEM_ID, notification);
+    }
+
+    public static void notifyIdentityChanged(Context context, String number) {
+        notifyIdentityChanged(context, number, null);
+    }
+
+    public static void notifyIdentityChanged(Context context, String number, IdentityKey identityKey) {
+        String description = context.getString(R.string.MessageNotifier_contacts_identity_fingerprint_has_changed);
+        Contact contact = ContactsFactory.getContactFromNumber(context, number, false);
+        PendingIntent pendingIntent;
+        if (identityKey != null) {
+            Intent intent = new Intent(context, VerifyIdentitiesActivity.class)
+                    .putExtra("contact", contact)
+                    .putExtra("identity_key", identityKey.serialize());
+            pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        } else {
+            pendingIntent = null;
+        }
+        Notification notification = new Notification.BigTextStyle(
+                new Notification.Builder(context)
+                        .setSmallIcon(R.drawable.ic_notify)
+                        .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_notify))
+                        .setContentTitle(contact.toShortString())
+                        .setContentText(description)
+                        .setContentIntent(pendingIntent)
+        ).bigText(description).build();
+        ((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE))
                 .notify(PROBLEM_ID, notification);
     }
 

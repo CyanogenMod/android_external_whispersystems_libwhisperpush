@@ -42,4 +42,10 @@ public class WPIdentityKeyStore implements IdentityKeyStore {
     return DatabaseFactory.getIdentityDatabase(context)
                           .isValidIdentity(masterSecret, recipient, identityKey);
   }
+
+  public boolean deleteIdentity(String number) {
+    MessagePeer recipient = new MessagePeer(context, number);
+    return DatabaseFactory.getIdentityDatabase(context).deleteIdentity(recipient);
+  }
+
 }

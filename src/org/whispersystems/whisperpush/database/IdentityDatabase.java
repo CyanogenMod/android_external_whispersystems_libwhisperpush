@@ -34,6 +34,8 @@ import org.whispersystems.whisperpush.crypto.MessagePeer;
 
 import java.io.IOException;
 
+import static java.lang.String.valueOf;
+
 public class IdentityDatabase {
 
     private static final Uri CHANGE_URI = Uri.parse("content://whisperpush/identities");
@@ -146,6 +148,17 @@ public class IdentityDatabase {
 
         database.replace(TABLE_NAME, null, contentValues);
         context.getContentResolver().notifyChange(CHANGE_URI, null);
+    }
+
+    public boolean deleteIdentity(MessagePeer address) {
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        long addressId = address.getCanonicalAddress(context);
+        int affected = database.delete(TABLE_NAME, ADDRESS + "=?", new String[] { valueOf(addressId) });
+        if (affected > 0) {
+            context.getContentResolver().notifyChange(CHANGE_URI, null);
+            return true;
+        }
+        return false;
     }
 
     public Cursor getIdentities() {

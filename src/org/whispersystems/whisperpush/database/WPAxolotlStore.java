@@ -134,4 +134,9 @@ public class WPAxolotlStore implements AxolotlStore {
     public void removeSignedPreKey(int signedPreKeyId) {
         signedPreKeyStore.removeSignedPreKey(signedPreKeyId);
     }
+
+    public WPIdentityKeyStore getIdentityKeyStore() {
+        return identityKeyStore;
+    }
+
 }

@@ -19,7 +19,11 @@ package org.whispersystems.whisperpush.crypto;
 import java.io.IOException;
 
 public class IdentityMismatchException extends IOException {
-    public IdentityMismatchException(String s) {
-        super(s);
+    public IdentityMismatchException(String message) {
+        super(message);
+    }
+
+    public IdentityMismatchException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
