@@ -25,10 +25,11 @@ public class DatabaseFactory {
 
     private static DatabaseFactory instance;
 
-    private final CanonicalAddressDatabase addressDatabase;
-    private final IdentityDatabase         identityDatabase;
-    private final PendingApprovalDatabase  pendingApprovalDatabase;
-    private final GroupDatabase            groupDatabase;
+    private final CanonicalAddressDatabase   addressDatabase;
+    private final IdentityDatabase           identityDatabase;
+    private final PendingApprovalDatabase    pendingApprovalDatabase;
+    private final GroupDatabase              groupDatabase;
+    private final FailedGroupMessageDatabase failedGroupMessageDatabase;
 
     public synchronized static DatabaseFactory getInstance(Context context) {
         if (instance == null)
@@ -40,10 +41,11 @@ public class DatabaseFactory {
     private DatabaseFactory(Context context) {
         WhisperPushDbHelper databaseHelper = WhisperPushDbHelper.getInstance(context);
 
-        this.identityDatabase        = new IdentityDatabase(context, databaseHelper);
-        this.addressDatabase         = new CanonicalAddressDatabase(databaseHelper);
-        this.pendingApprovalDatabase = new PendingApprovalDatabase(context, databaseHelper);
-        this.groupDatabase           = new GroupDatabase(databaseHelper);
+        this.identityDatabase           = new IdentityDatabase(context, databaseHelper);
+        this.addressDatabase            = new CanonicalAddressDatabase(databaseHelper);
+        this.pendingApprovalDatabase    = new PendingApprovalDatabase(context, databaseHelper);
+        this.groupDatabase              = new GroupDatabase(databaseHelper);
+        this.failedGroupMessageDatabase = new FailedGroupMessageDatabase(databaseHelper);
     }
 
     public static CanonicalAddressDatabase getAddressDatabase(Context context) {
@@ -60,6 +62,10 @@ public class DatabaseFactory {
 
     public static GroupDatabase getGroupDatabase(Context context) {
         return getInstance(context).groupDatabase;
+    }
+
+    public static FailedGroupMessageDatabase getFailedGroupMessageDatabase(Context context) {
+        return getInstance(context).failedGroupMessageDatabase;
     }
 
 }
