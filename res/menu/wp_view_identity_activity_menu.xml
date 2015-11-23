@@ -3,7 +3,7 @@
 
     <item android:title="@string/view_identity_activity_menu__compare"
           android:id="@+id/menu_barcode"
-          android:icon="@drawable/ic_menu_barcode"
+          android:icon="@drawable/wp_ic_menu_barcode"
           android:showAsAction="ifRoom">
 
         <menu>

@@ -77,9 +77,9 @@ public class MessageNotifier {
 
         Notification notification = new Notification.BigTextStyle(
                 new Notification.Builder(context)
-                        .setSmallIcon(R.drawable.ic_notify)
+                        .setSmallIcon(R.drawable.wp_ic_notify)
                         .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
-                                R.drawable.ic_notify))
+                                R.drawable.wp_ic_notify))
                         .setContentIntent(PendingIntent.getActivity(context, 0, preferenceActivityIntent, 0))
                         .setContentTitle(context.getString(R.string.MessageNotifier_user_unregistered_from_service_title))
                         .setContentText(context.getString(R.string.MessageNotifier_user_unregistered_from_service_content))
@@ -92,7 +92,7 @@ public class MessageNotifier {
     public static void notifyProblem(Context context, Contact contact, String description) {
         Notification notification = new Notification.BigTextStyle(
                 new Notification.Builder(context)
-                        .setSmallIcon(R.drawable.ic_notify)
+                        .setSmallIcon(R.drawable.wp_ic_notify)
                         .setLargeIcon(contact.getAvatar())
                         .setContentTitle(contact.toShortString())
                         .setContentText(description)
@@ -105,9 +105,9 @@ public class MessageNotifier {
     public static void notifyBlacklisted(Context context, String number) {
         Notification notification = new Notification.BigTextStyle(
                 new Notification.Builder(context)
-                        .setSmallIcon(R.drawable.ic_notify)
+                        .setSmallIcon(R.drawable.wp_ic_notify)
                         .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
-                                R.drawable.ic_notify))
+                                R.drawable.wp_ic_notify))
                         .setContentTitle(context.getString(
                                 R.string.MessageNotifier_user_received_message_from_blacklisted_number_title))
                         .setContentText(String.format(context.getString(
@@ -137,8 +137,8 @@ public class MessageNotifier {
         }
         Notification notification = new Notification.BigTextStyle(
                 new Notification.Builder(context)
-                        .setSmallIcon(R.drawable.ic_notify)
-                        .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_notify))
+                        .setSmallIcon(R.drawable.wp_ic_notify)
+                        .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.wp_ic_notify))
                         .setContentTitle(contact.toShortString())
                         .setContentText(description)
                         .setContentIntent(pendingIntent)
@@ -150,9 +150,9 @@ public class MessageNotifier {
     public static void notifyProblem(Context context, String title, String description) {
         Notification notification = new Notification.BigTextStyle(
                 new Notification.Builder(context)
-                        .setSmallIcon(R.drawable.ic_notify)
+                        .setSmallIcon(R.drawable.wp_ic_notify)
                         .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
-                                R.drawable.ic_notify))
+                                R.drawable.wp_ic_notify))
                         .setContentTitle(title)
                         .setContentText(description)
         ).bigText(description).build();
@@ -164,9 +164,9 @@ public class MessageNotifier {
     public static void notifyProblemAndUnregister(Context context, String title, String description) {
         Notification notification = new Notification.BigTextStyle(
                 new Notification.Builder(context)
-                        .setSmallIcon(R.drawable.ic_notify)
+                        .setSmallIcon(R.drawable.wp_ic_notify)
                         .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
-                                R.drawable.ic_notify))
+                                R.drawable.wp_ic_notify))
                         .setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, ErrorAndResetActivity.class), 0))
                         .setContentTitle(title)
                         .setContentText(description)
@@ -249,7 +249,7 @@ public class MessageNotifier {
             intent.setData((Uri.parse("custom://" + System.currentTimeMillis())));
             PendingIntent verifyPi = PendingIntent.getActivity(context, 0, intent, 0);
 
-            builder.setSmallIcon(R.drawable.ic_notify);
+            builder.setSmallIcon(R.drawable.wp_ic_notify);
             builder.setLargeIcon(contact.getAvatar());
             builder.setContentTitle(context.getString(R.string.MessageNotifier_new_session_title));
 

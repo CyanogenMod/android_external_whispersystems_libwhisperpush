@@ -80,7 +80,7 @@
                      android:layout_width="wrap_content"
                      android:background="@null"
                      android:layout_gravity="center"
-                     android:src="@drawable/twilio_powered_by"
+                     android:src="@drawable/wp_powered_by_twilio"
                      android:id="@+id/twilio_button" />
 
         <TextView android:id="@+id/privacy_policy"

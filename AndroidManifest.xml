@@ -36,7 +36,7 @@
                 android:protectionLevel="signature" />
 
     <application android:name=".WhisperPush"
-                 android:icon="@drawable/icon"
+                 android:icon="@drawable/wp_icon"
                  android:label="WhisperPush"
                  android:allowBackup="false"
                  android:theme="@style/Theme.WhisperPush.Main">

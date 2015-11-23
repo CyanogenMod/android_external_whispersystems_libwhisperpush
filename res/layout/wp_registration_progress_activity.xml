@@ -32,7 +32,7 @@
                         android:layout_alignParentLeft="true"
                         android:paddingLeft="4dip"
                         android:paddingRight="4dip"
-                        android:src="@drawable/alert"
+                        android:src="@drawable/wp_alert"
                         android:contentDescription="@string/registration_progress_activity__alert"/>
 
                 <TextView
@@ -68,7 +68,7 @@
                            android:layout_height="wrap_content"
                            android:paddingLeft="4dip"
                            android:paddingRight="4dip"
-                           android:src="@drawable/telephone"
+                           android:src="@drawable/wp_telephone"
                            android:contentDescription="@string/registration_progress_activity__telephone"/>
 
                 <TextView style="@style/WhisperPush.Registration.Constant"
@@ -160,7 +160,7 @@
                         android:layout_alignParentLeft="true"
                         android:paddingLeft="4dip"
                         android:paddingRight="4dip"
-                        android:src="@drawable/alert"
+                        android:src="@drawable/wp_alert"
                         android:contentDescription="@string/registration_progress_activity__alert"/>
 
                 <TextView
@@ -308,7 +308,7 @@
                                 android:gravity="center"
                                 android:paddingLeft="4dip"
                                 android:paddingRight="4dip"
-                                android:src="@drawable/check_dark"
+                                android:src="@drawable/wp_check_dark"
                                 android:visibility="invisible"
                                 android:contentDescription="@string/registration_progress_activity__check"/>
 
@@ -352,7 +352,7 @@
                                 android:gravity="center"
                                 android:paddingLeft="4dip"
                                 android:paddingRight="4dip"
-                                android:src="@drawable/check_dark"
+                                android:src="@drawable/wp_check_dark"
                                 android:visibility="invisible"
                                 android:contentDescription="@string/registration_progress_activity__check"/>
 
@@ -396,7 +396,7 @@
                                 android:gravity="center"
                                 android:paddingLeft="4dip"
                                 android:paddingRight="4dip"
-                                android:src="@drawable/check_dark"
+                                android:src="@drawable/wp_check_dark"
                                 android:visibility="invisible"
                                 android:contentDescription="@string/registration_progress_activity__check"/>
 
@@ -441,7 +441,7 @@
                                 android:gravity="center"
                                 android:paddingLeft="4dip"
                                 android:paddingRight="4dip"
-                                android:src="@drawable/check_dark"
+                                android:src="@drawable/wp_check_dark"
                                 android:visibility="invisible"
                                 android:contentDescription="@string/registration_progress_activity__check"/>
 

@@ -114,7 +114,7 @@ public class ContactsFactory {
     private synchronized static Bitmap getDefaultContactPhoto(Context context) {
         if (defaultContactPhoto == null)
             defaultContactPhoto =  BitmapFactory.decodeResource(context.getResources(),
-                    R.drawable.ic_contact_picture);
+                    R.drawable.wp_ic_contact_picture);
         return defaultContactPhoto;
     }
 
