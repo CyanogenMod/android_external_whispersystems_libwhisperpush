@@ -165,7 +165,7 @@ public class WhisperPushMessageSender {
 
         boolean isGroupMessage = false;
 
-        if (recipients.size() > 0) {
+        if (recipients.size() > 1) {
             isGroupMessage = true;
 
             TextSecureGroup textSecureGroup;
