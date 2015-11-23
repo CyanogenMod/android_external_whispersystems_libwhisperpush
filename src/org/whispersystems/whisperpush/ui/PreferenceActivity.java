@@ -46,6 +46,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
@@ -208,6 +209,10 @@ public class PreferenceActivity extends Activity {
             new AsyncTask<Void, Void, Boolean>() {
                 @Override
                 protected Boolean doInBackground(Void... param) {
+                    WhisperPush whisperPush = WhisperPush.getInstance(mApplicationContext);
+                    if (!whisperPush.isSecureMessagingNetworkAvailable()) {
+                        return null;
+                    }
                     TextSecureAccountManager manager =
                             WhisperServiceFactory.createAccountManager(context);
                     try {
@@ -235,10 +240,16 @@ public class PreferenceActivity extends Activity {
             }.execute();
         }
 
-        private void onWhisperPushUnregisterFinished(boolean result) {
+        private void onWhisperPushUnregisterFinished(Boolean result) {
             Context context = getActivity() != null ? getActivity() : mApplicationContext;
-            if(result) {
+            if (result == Boolean.TRUE) {
                 MessageNotifier.notifyUnRegistered(context);
+            } else if (result == null) {
+                Toast.makeText(context, R.string.registration_progress_activity__no_network_connectivity,
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, R.string.registration_progress_activity__connectivity_error,
+                        Toast.LENGTH_SHORT).show();
             }
             mProgressDialog.dismiss();
             setupPreferences();
