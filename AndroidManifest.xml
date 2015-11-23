@@ -31,10 +31,6 @@
     <permission android:name="org.whispersystems.whisperpush.permissions.REGISTER"
                 android:protectionLevel="signatureOrSystem" />
 
-    <permission android:name="org.whispersystems.whisperpush.permission.UPGRADE"
-                androidprv:allowViaWhitelist="true"
-                android:protectionLevel="signature" />
-
     <application android:icon="@drawable/wp_icon"
                  android:label="WhisperPush"
                  android:allowBackup="false"
