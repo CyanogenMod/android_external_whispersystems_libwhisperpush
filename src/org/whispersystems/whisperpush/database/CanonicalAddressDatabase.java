@@ -46,7 +46,7 @@ public class CanonicalAddressDatabase {
 
     private final SQLiteOpenHelper databaseHelper;
 
-    public CanonicalAddressDatabase(SQLiteOpenHelper databaseHelper) {
+    CanonicalAddressDatabase(SQLiteOpenHelper databaseHelper) {
         this.databaseHelper = databaseHelper;
     }
 

@@ -60,8 +60,8 @@ public class IdentityDatabase {
     private final Context context;
     private final SQLiteOpenHelper databaseHelper;
 
-    public IdentityDatabase(Context context, SQLiteOpenHelper databaseHelper) {
-        this.context        = context;
+    IdentityDatabase(Context context, SQLiteOpenHelper databaseHelper) {
+        this.context        = context.getApplicationContext();
         this.databaseHelper = databaseHelper;
     }
 

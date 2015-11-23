@@ -56,8 +56,8 @@ public class PendingApprovalDatabase {
     private final Context context;
     private final SQLiteOpenHelper databaseHelper;
 
-    public PendingApprovalDatabase(Context context, SQLiteOpenHelper databaseHelper) {
-        this.context        = context;
+    PendingApprovalDatabase(Context context, SQLiteOpenHelper databaseHelper) {
+        this.context        = context.getApplicationContext();
         this.databaseHelper = databaseHelper;
     }
 

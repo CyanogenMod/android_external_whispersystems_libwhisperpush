@@ -23,7 +23,7 @@ public class GroupDatabase {
 
     private final SQLiteDatabase database;
 
-    public GroupDatabase(SQLiteOpenHelper databaseHelper) {
+    GroupDatabase(SQLiteOpenHelper databaseHelper) {
         this.database = databaseHelper.getWritableDatabase();
     }
 

@@ -28,7 +28,7 @@ public class FailedGroupMessageDatabase {
 
     private final SQLiteDatabase database;
 
-    public FailedGroupMessageDatabase(SQLiteOpenHelper databaseHelper) {
+    FailedGroupMessageDatabase(SQLiteOpenHelper databaseHelper) {
         this.database = databaseHelper.getWritableDatabase();
     }
 
