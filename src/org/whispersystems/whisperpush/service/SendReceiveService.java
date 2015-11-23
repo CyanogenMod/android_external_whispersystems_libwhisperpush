@@ -20,6 +20,8 @@ package org.whispersystems.whisperpush.service;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.support.v4.content.WakefulBroadcastReceiver;
+import android.util.Log;
 
 import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
 import org.whispersystems.whisperpush.WhisperPush;
@@ -28,8 +30,10 @@ import org.whispersystems.whisperpush.database.PendingApprovalDatabase;
 import org.whispersystems.whisperpush.sms.OutgoingSmsQueue;
 import org.whispersystems.whisperpush.api.OutgoingMessage;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * The service that does the work of delivering outgoing messages and processing
@@ -38,6 +42,8 @@ import java.util.concurrent.Executors;
  * @author Moxie Marlinspike
  */
 public class SendReceiveService extends Service {
+
+    private static final String TAG = "SendReceiveService";
 
     public static final String RCV_NOTIFICATION = "org.whispersystems.SendReceiveService.RCV_NOTIFICATION";
     public static final String RCV_PENDING      = "org.whispersystems.SendReceiveService.RCV_PENDING";
@@ -51,6 +57,8 @@ public class SendReceiveService extends Service {
     private volatile WhisperPush whisperPush;
     private MessageReceiver messageReceiver;
 
+    private final BlockingQueue<Integer> startsQueue = new LinkedBlockingQueue<>(256); //TODO optimize: keep latest startId only and counter
+
     @Override
     public void onCreate() {
         this.whisperPush = WhisperPush.getInstance(this);
@@ -59,33 +67,43 @@ public class SendReceiveService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
-        if (intent != null) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    String action = intent.getAction();
-                    if (RCV_NOTIFICATION.equals(action)) {
-                        messageReceiver.handleNotification();
-                    } else if (RCV_PENDING.equals(action)) {
-                        long messageId = intent.getLongExtra("message_id", 0);
-                        PendingApprovalDatabase database = DatabaseFactory.
-                                getPendingApprovalDatabase(getApplicationContext());
-                        TextSecureEnvelope message = database.get(messageId);
-                        if(message != null) {
-                            database.delete(messageId);
-                            messageReceiver.handleEnvelope(message, true);
-                        }
-                    } else if (SEND_SMS.equals(action)) {
-                        OutgoingMessage message = outgoingQueue.get();
-                        if (message != null) {
-                            whisperPush.getMessageSender().sendTextMessage(message);
-                        }
-                    }
+        startsQueue.offer(startId);
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (intent != null) {
+                    onHandleIntent(intent);
+                    WakefulBroadcastReceiver.completeWakefulIntent(intent);
                 }
-            });
-        }
-
+                Integer startId = startsQueue.poll();
+                if (startId != null) {
+                    stopSelf(startId);
+                } else {
+                    Log.e(TAG, "startId == null");
+                }
+            }
+        });
         return START_NOT_STICKY;
+    }
+
+    protected void onHandleIntent(Intent intent) {
+        String action = intent.getAction();
+        if (RCV_NOTIFICATION.equals(action)) {
+            messageReceiver.handleNotification();
+        } else if (RCV_PENDING.equals(action)) {
+            long messageId = intent.getLongExtra("message_id", 0);
+            PendingApprovalDatabase database = DatabaseFactory.getPendingApprovalDatabase(this);
+            TextSecureEnvelope message = database.get(messageId);
+            if (message != null) {
+                database.delete(messageId);
+                messageReceiver.handleEnvelope(message, true);
+            }
+        } else if (SEND_SMS.equals(action)) {
+            OutgoingMessage message = outgoingQueue.get();
+            if (message != null) {
+                whisperPush.getMessageSender().sendTextMessage(message);
+            }
+        }
     }
 
     @Override

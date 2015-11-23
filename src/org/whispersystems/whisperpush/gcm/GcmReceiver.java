@@ -17,6 +17,7 @@
 package org.whispersystems.whisperpush.gcm;
 
 
+import org.whispersystems.whisperpush.WhisperPush;
 import org.whispersystems.whisperpush.service.DirectoryRefreshListener;
 import org.whispersystems.whisperpush.service.SendReceiveService;
 import org.whispersystems.whisperpush.util.WhisperPreferences;
@@ -25,6 +26,7 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -34,7 +36,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
  *
  * @author Moxie Marlinspike
  */
-public class GcmReceiver extends BroadcastReceiver {
+public class GcmReceiver extends WakefulBroadcastReceiver {
   private static final String TAG = "GcmReceiver";
 
   @Override
@@ -45,7 +47,8 @@ public class GcmReceiver extends BroadcastReceiver {
     if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(gcm.getMessageType(intent))) {
       Log.d(TAG, "GCM message...");
 
-      if (!WhisperPreferences.isRegistered(context)) {
+      WhisperPush whisperPush = WhisperPush.getInstance(context);
+      if (!whisperPush.isSecureMessagingActive()) {
         Log.w(TAG, "Not push registered!");
         return;
       }
@@ -75,6 +78,6 @@ public class GcmReceiver extends BroadcastReceiver {
   private void handleReceivedNotification(Context context) {
     Intent serviceIntent = new Intent(context, SendReceiveService.class);
     serviceIntent.setAction(SendReceiveService.RCV_NOTIFICATION);
-    context.startService(serviceIntent);
+    startWakefulService(context, serviceIntent);
   }
 }
