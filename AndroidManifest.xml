@@ -4,7 +4,7 @@
           xmlns:tools="http://schemas.android.com/tools"
           package="org.whispersystems.whisperpush">
 
-    <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="21"/>
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="21"/>
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
@@ -35,8 +35,7 @@
                 androidprv:allowViaWhitelist="true"
                 android:protectionLevel="signature" />
 
-    <application android:name=".WhisperPush"
-                 android:icon="@drawable/wp_icon"
+    <application android:icon="@drawable/wp_icon"
                  android:label="WhisperPush"
                  android:allowBackup="false"
                  android:theme="@style/Theme.WhisperPush.Main">
@@ -44,88 +43,89 @@
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <activity android:name=".ui.RegistrationActivity"
+        <activity android:name="org.whispersystems.whisperpush.ui.RegistrationActivity"
                   android:windowSoftInputMode="stateUnchanged"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize">
-
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
-
-
         </activity>
 
-        <activity android:name=".ui.GooglePlayServicesUpdateActivity" />
+        <activity android:name="org.whispersystems.whisperpush.ui.GooglePlayServicesUpdateActivity"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
 
-        <activity android:name=".ui.CountrySelectionActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
-
-        <activity android:name=".ui.ErrorAndResetActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
-
-        <activity android:name=".ui.RegistrationProgressActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
-
-        <activity android:name=".ui.RegistrationProblemsActivity"
-                  android:theme="@android:style/Theme.Material.Light.Dialog"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
-
-        <activity android:name=".ui.RegistrationCompletedActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
-
-        <activity android:name=".ui.ReviewIdentitiesActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
-                  android:label="@string/pref_review_keys__title"
-                  android:theme="@style/Theme.WhisperPush.Main">
-
-
-        </activity>
-
-        <activity android:name=".ui.ViewIdentityActivity"
+        <activity android:name="org.whispersystems.whisperpush.ui.CountrySelectionActivity"
                   android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
                   android:theme="@style/Theme.WhisperPush.Main"/>
 
-        <activity android:name=".ui.ViewMyIdentityActivity"
+        <activity android:name="org.whispersystems.whisperpush.ui.ErrorAndResetActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
+
+        <activity android:name="org.whispersystems.whisperpush.ui.RegistrationProgressActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
+
+        <activity android:name="org.whispersystems.whisperpush.ui.RegistrationProblemsActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Dialog"/>
+
+        <activity android:name=".ui.RegistrationCompletedActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
+
+        <activity android:name="org.whispersystems.whisperpush.ui.ReviewIdentitiesActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:label="@string/pref_review_keys__title"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
+
+        <activity android:name="org.whispersystems.whisperpush.ui.ViewIdentityActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
+
+        <activity android:name="org.whispersystems.whisperpush.ui.ViewMyIdentityActivity"
                   android:label="@string/pref_my_identity__title"
                   android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
                   android:theme="@style/Theme.WhisperPush.Main"/>
 
-        <activity android:name=".ui.ViewNewIdentityActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
+        <activity android:name="org.whispersystems.whisperpush.ui.ViewNewIdentityActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
 
-        <activity android:name=".ui.VerifyIdentityActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
+        <activity android:name="org.whispersystems.whisperpush.ui.VerifyIdentityActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
 
-        <activity android:name=".ui.VerifyIdentitiesActivity"
-                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
+        <activity android:name="org.whispersystems.whisperpush.ui.VerifyIdentitiesActivity"
+                  android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
+                  android:theme="@style/Theme.WhisperPush.Main"/>
 
-        <activity android:name=".ui.PreferenceActivity"
+        <activity android:name="org.whispersystems.whisperpush.ui.PreferenceActivity"
                   android:exported="true"
                   android:label="@string/pref_whisperpush_title"
                   android:theme="@style/Theme.WhisperPush.Main"/>
 
         <service android:enabled="true"
                  android:exported="true"
-                 android:name=".service.RegistrationService"
+                 android:name="org.whispersystems.whisperpush.service.RegistrationService"
                  android:permission="org.whispersystems.whisperpush.permissions.REGISTER"/>
 
         <service android:enabled="true"
-                 android:exported="true"
-                 android:name=".service.UpgradeService"
-                 android:permission="org.whispersystems.whisperpush.permission.UPGRADE"/>
+                 android:name="org.whispersystems.whisperpush.service.SendReceiveService"/>
 
-        <service android:enabled="true" android:name=".service.SendReceiveService"/>
-        <service android:enabled="true" android:name=".service.DirectoryRefreshService"/>
+        <service android:enabled="true"
+                 android:name="org.whispersystems.whisperpush.service.DirectoryRefreshService"/>
 
-        <receiver android:name=".sms.OutgoingSmsListener"
-                  android:enabled="true"
+        <receiver android:name="org.whispersystems.whisperpush.sms.OutgoingSmsListener"
+                  android:enabled="false"
                   android:exported="true">
             <intent-filter android:priority="2147483647">
                 <action android:name="android.intent.action.NEW_OUTGOING_SMS"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".sms.IncomingSmsListener"
+        <receiver android:name="org.whispersystems.whisperpush.sms.IncomingSmsListener"
                   android:enabled="false"
                   android:exported="true">
             <intent-filter android:priority="2147483647">
@@ -134,7 +134,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".gcm.GcmReceiver"
+        <receiver android:name="org.whispersystems.whisperpush.gcm.GcmReceiver"
                   android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
@@ -142,13 +142,12 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".service.DirectoryRefreshListener">
+        <receiver android:name="org.whispersystems.whisperpush.service.DirectoryRefreshListener">
             <intent-filter>
                 <action android:name="org.whispersystems.whisperpush.DIRECTORY_REFRESH"/>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
 
         <provider android:authorities="org.whispersystems.whisperpush.provider"
                   android:name=".attachments.AttachmentProvider"

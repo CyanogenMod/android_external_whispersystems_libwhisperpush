@@ -22,6 +22,9 @@
         <item name="android:actionBarStyle">@style/Theme.WhisperPush.ActionBar.SubSettings</item>
     </style>
 
+    <style name="Theme.WhisperPush.Dialog" parent="@android:style/Theme.Material.Light.Dialog">
+    </style>
+
     <style name="Theme.WhisperPush.ActionBar.SubSettings" parent="@android:style/Widget.Material.Light.ActionBar.Solid">
         <item name="android:contentInsetStart">@dimen/whisperpush_actionbar_subsettings_contentInsetStart</item>
     </style>
