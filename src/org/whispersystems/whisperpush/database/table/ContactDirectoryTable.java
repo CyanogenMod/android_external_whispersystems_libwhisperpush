@@ -1,4 +1,4 @@
-package org.whispersystems.whisperpush.db.table;
+package org.whispersystems.whisperpush.database.table;
 
 import android.provider.BaseColumns;
 

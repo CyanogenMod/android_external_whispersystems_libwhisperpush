@@ -8,20 +8,16 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.whispersystems.libaxolotl.IdentityKey;
 import org.whispersystems.libaxolotl.InvalidKeyException;
 import org.whispersystems.textsecure.internal.util.Base64;
-import org.whispersystems.whisperpush.exception.IllegalUriException;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.EditText;
@@ -153,22 +149,6 @@ public class Util {
             byteBuffer.close();
         }
 
-    }
-
-    public static long extractMessageId(Uri uri) throws IllegalUriException {
-        if (uri == null) {
-            throw  new IllegalUriException("uri == null");
-        }
-        String authority = uri.getAuthority();
-        if ("sms".equals(authority) || "mms".equals(authority)) {
-            try {
-                return ContentUris.parseId(uri);
-            } catch (NumberFormatException ex) {
-                throw  new IllegalUriException(uri, ex);
-            }
-        } else {
-            throw new IllegalUriException("Unsupported authority " + authority);
-        }
     }
 
     public static <T> Set<T> asSet(Collection<T> collection) {

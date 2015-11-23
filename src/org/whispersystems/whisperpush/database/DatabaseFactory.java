@@ -18,8 +18,6 @@ package org.whispersystems.whisperpush.database;
 
 import android.content.Context;
 
-import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
-
 public class DatabaseFactory {
 
 

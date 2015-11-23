@@ -1,15 +1,10 @@
-package org.whispersystems.whisperpush.db;
+package org.whispersystems.whisperpush.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import org.whispersystems.whisperpush.database.CanonicalAddressDatabase;
-import org.whispersystems.whisperpush.database.FailedGroupMessageDatabase;
-import org.whispersystems.whisperpush.database.GroupDatabase;
-import org.whispersystems.whisperpush.database.IdentityDatabase;
-import org.whispersystems.whisperpush.database.PendingApprovalDatabase;
-import org.whispersystems.whisperpush.db.table.ContactDirectoryTable;
+import org.whispersystems.whisperpush.database.table.ContactDirectoryTable;
 
 public class WhisperPushDbHelper extends SQLiteOpenHelper {
 

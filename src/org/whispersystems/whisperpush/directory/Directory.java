@@ -19,7 +19,6 @@ package org.whispersystems.whisperpush.directory;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
@@ -29,9 +28,8 @@ import android.text.TextUtils;
 import org.whispersystems.textsecure.api.push.ContactTokenDetails;
 import org.whispersystems.textsecure.api.util.InvalidNumberException;
 import org.whispersystems.textsecure.api.util.PhoneNumberFormatter;
-import org.whispersystems.whisperpush.db.WhisperPushDbHelper;
-import org.whispersystems.whisperpush.db.table.ContactDirectoryTable;
-import org.whispersystems.whisperpush.util.Util;
+import org.whispersystems.whisperpush.database.WhisperPushDbHelper;
+import org.whispersystems.whisperpush.database.table.ContactDirectoryTable;
 import org.whispersystems.whisperpush.WhisperPush;
 
 import java.util.ArrayList;
@@ -40,13 +38,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.NUMBER;
-import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.REGISTERED;
-import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.RELAY;
-import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.SESSION_ACTIVE;
-import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.SUPPORTS_SMS;
-import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TABLE_NAME;
-import static org.whispersystems.whisperpush.db.table.ContactDirectoryTable.TIMESTAMP;
+import static org.whispersystems.whisperpush.database.table.ContactDirectoryTable.NUMBER;
+import static org.whispersystems.whisperpush.database.table.ContactDirectoryTable.REGISTERED;
+import static org.whispersystems.whisperpush.database.table.ContactDirectoryTable.RELAY;
+import static org.whispersystems.whisperpush.database.table.ContactDirectoryTable.SESSION_ACTIVE;
+import static org.whispersystems.whisperpush.database.table.ContactDirectoryTable.SUPPORTS_SMS;
+import static org.whispersystems.whisperpush.database.table.ContactDirectoryTable.TABLE_NAME;
+import static org.whispersystems.whisperpush.database.table.ContactDirectoryTable.TIMESTAMP;
 import static org.whispersystems.whisperpush.util.Util.isEmpty;
 
 public class Directory {
