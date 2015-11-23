@@ -59,10 +59,6 @@ import android.net.Uri;
 import android.util.Log;
 import android.util.Pair;
 
-import com.google.android.mms.MmsException;
-import com.google.android.mms.pdu.PduPart;
-import com.google.android.mms.pdu.PduPersister;
-
 public class MessageReceiver {
 
     private static final String TAG = MessageReceiver.class.getSimpleName();
@@ -225,9 +221,9 @@ public class MessageReceiver {
         } else if (type == TextSecureGroup.Type.DELIVER) {
             try {
                 long threadId = groupDatabase.getThreadId(groupId);
-                List<Pair<byte[], byte[]>> attachments;
+                List<Pair<byte[], Uri>> attachments;
                 if (attach.isPresent()) {
-                    attachments = retrieveAttachmentsBytes(attach.get());
+                    attachments = retrieveAttachments(attach.get(), timestamp);
                 } else {
                     attachments = Collections.EMPTY_LIST;
                 }
@@ -256,7 +252,7 @@ public class MessageReceiver {
                                          Optional<List<TextSecureAttachment>> attach,
                                          String textBody, long timestamp) {
         try {
-            List<Pair<byte[], byte[]>> attachments = retrieveAttachmentsBytes(attach.get());
+            List<Pair<byte[], Uri>> attachments = retrieveAttachments(attach.get(), timestamp);
             messagingBridge.storeIncomingMultimediaMessage(source, textBody, attachments, timestamp);
         } catch (Throwable e) {
             Log.w(TAG, e);
@@ -287,11 +283,11 @@ public class MessageReceiver {
         }
     }
 
-    private List<Pair<String, String>> retrieveAttachments(long threadId, List<TextSecureAttachment> list)
+    private List<Pair<byte[], Uri>> retrieveAttachments(List<TextSecureAttachment> list, long timestamp)
             throws IOException, InvalidMessageException
     {
         AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
-        List<Pair<String, String>> results = new LinkedList<Pair<String, String>>();
+        List<Pair<byte[], Uri>> results = new LinkedList<>();
         TextSecureMessageReceiver receiver = getTextSecureReceiver();
         for (TextSecureAttachment attachment : list) {
             InputStream stream = null;
@@ -310,45 +306,14 @@ public class MessageReceiver {
                 }
             }
 
-            PduPersister pduPersister = PduPersister.getPduPersister(context);
-            PduPart pduPart = new PduPart();
-            pduPart.setContentType(Util.toIsoBytes(attachment.getContentType()));
-            pduPart.setData(attachmentBytes);
-            try {
-                Uri uri = pduPersister.persistPart(pduPart, threadId, null);
-                results.add(Pair.create(uri.toString(), attachment.getContentType()));
-            } catch (MmsException e) {
-                Log.e(TAG, "Cannot persist attachment", e);
+            byte[] contentType = Util.toIsoBytes(attachment.getContentType());
+            // use sentAt timestamp as dummyId
+            Uri uri = whisperPush.getMessagingBridge().persistPart(contentType, attachmentBytes, timestamp);
+            if (uri != null) {
+                results.add(new Pair<>(contentType, uri));
+            } else {
+                Log.w(TAG, "Cannot persist attachment");
             }
-        }
-
-        return results;
-    }
-
-    private List<Pair<byte[], byte[]>> retrieveAttachmentsBytes(List<TextSecureAttachment> list)
-            throws IOException, InvalidMessageException
-    {
-        AttachmentManager attachmentManager = AttachmentManager.getInstance(context);
-        List<Pair<byte[], byte[]>> results = new LinkedList<>();
-        TextSecureMessageReceiver receiver = getTextSecureReceiver();
-        for (TextSecureAttachment attachment : list) {
-            InputStream stream = null;
-            byte[] attachmentBytes;
-
-            try {
-                if (attachment instanceof TextSecureAttachmentPointer) {
-                    stream = attachmentManager.store((TextSecureAttachmentPointer) attachment, receiver);
-                } else {
-                    stream = attachment.asStream().getInputStream();
-                }
-                attachmentBytes = Util.readBytes(stream);
-            } finally {
-                if (stream != null) {
-                    stream.close();
-                }
-            }
-
-            results.add(new Pair<>(Util.toIsoBytes(attachment.getContentType()), attachmentBytes));
         }
 
         return results;
