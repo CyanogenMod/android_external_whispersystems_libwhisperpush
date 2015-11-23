@@ -16,13 +16,13 @@
 -->
 <resources>
     <style name="Theme.WhisperPush.Main" parent="@android:style/Theme.Material.Light.DarkActionBar">
-        <item name="android:colorPrimary">@color/theme_primary</item>
-        <item name="android:colorPrimaryDark">@color/theme_primary_dark</item>
-        <item name="android:colorAccent">@color/theme_accent</item>
+        <item name="android:colorPrimary">@color/whisperpush_theme_primary</item>
+        <item name="android:colorPrimaryDark">@color/whisperpush_theme_primary_dark</item>
+        <item name="android:colorAccent">@color/whisperpush_theme_accent</item>
         <item name="android:actionBarStyle">@style/Theme.WhisperPush.ActionBar.SubSettings</item>
     </style>
 
     <style name="Theme.WhisperPush.ActionBar.SubSettings" parent="@android:style/Widget.Material.Light.ActionBar.Solid">
-        <item name="android:contentInsetStart">@dimen/actionbar_subsettings_contentInsetStart</item>
+        <item name="android:contentInsetStart">@dimen/whisperpush_actionbar_subsettings_contentInsetStart</item>
     </style>
 </resources>
