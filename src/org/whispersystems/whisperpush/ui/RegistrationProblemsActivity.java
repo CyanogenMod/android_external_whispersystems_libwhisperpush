@@ -33,7 +33,7 @@ public class RegistrationProblemsActivity extends Activity {
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        setContentView(R.layout.registration_problems);
+        setContentView(R.layout.wp_registration_problems);
         setTitle(getString(R.string.RegistrationProblemsActivity_possible_problems));
 
         ((Button)findViewById(R.id.close_button)).setOnClickListener(new View.OnClickListener() {

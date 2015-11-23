@@ -41,7 +41,7 @@ public class ErrorAndResetActivity extends Activity {
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        setContentView(R.layout.error_and_reset_activity);
+        setContentView(R.layout.wp_error_and_reset_activity);
 
         mResetButton = (Button) findViewById(R.id.reset_button);
 

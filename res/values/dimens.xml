@@ -16,5 +16,5 @@
 -->
 <!-- ActionBar contentInsetStart -->
 <resources>
-    <dimen name="actionbar_subsettings_contentInsetStart">72dp</dimen>
+    <dimen name="whisperpush_actionbar_subsettings_contentInsetStart">72dp</dimen>
 </resources>

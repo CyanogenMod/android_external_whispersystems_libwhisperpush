@@ -28,7 +28,7 @@ public class RegistrationCompletedActivity extends Activity implements View.OnCl
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.registration_completed_activity);
+        setContentView(R.layout.wp_registration_completed_activity);
 
         findViewById(R.id.registerAgainButton).setOnClickListener(this);
     }

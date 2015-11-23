@@ -47,7 +47,7 @@ public abstract class KeyScanningActivity extends Activity {
         MenuInflater inflater = this.getMenuInflater();
         menu.clear();
 
-        inflater.inflate(R.menu.view_identity_activity_menu, menu);
+        inflater.inflate(R.menu.wp_view_identity_activity_menu, menu);
 
         return true;
     }

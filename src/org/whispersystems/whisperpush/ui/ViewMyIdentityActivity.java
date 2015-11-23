@@ -18,7 +18,7 @@ public class ViewMyIdentityActivity extends KeyScanningActivity {
         super.onCreate(bundle);
         this.identityKey = IdentityKeyUtil.getIdentityKey(this);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        setContentView(R.layout.view_identity_activity);
+        setContentView(R.layout.wp_view_identity_activity);
 
         initializeResources();
     }

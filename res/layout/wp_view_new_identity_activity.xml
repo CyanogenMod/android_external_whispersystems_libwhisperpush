@@ -32,12 +32,12 @@
 
         <TextView android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
-                  style="@style/Registration.Description"
+                  style="@style/WhisperPush.Registration.Description"
                   android:paddingTop="15dip"
                   android:paddingBottom="15dip"
                   android:text="@string/view_new_identity_activity__verify_fingerprint"/>
 
-        <TextView style="@style/Registration.Label"
+        <TextView style="@style/WhisperPush.Registration.Label"
                   android:layout_width="fill_parent"
                   android:textAllCaps="true"
                   android:text="@string/verify_identity_activity__their_fingerprint" />

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Registration.Description" parent="@android:style/TextAppearance">
+    <style name="WhisperPush.Registration.Description" parent="@android:style/TextAppearance">
         <item name="android:textSize">16.0sp</item>
         <item name="android:typeface">sans</item>
         <item name="android:textStyle">normal</item>
@@ -14,7 +14,7 @@
         <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
-    <style name="Registration.Label" parent="@android:style/TextAppearance">
+    <style name="WhisperPush.Registration.Label" parent="@android:style/TextAppearance">
         <item name="android:textSize">12.0sp</item>
         <item name="android:typeface">sans</item>
         <item name="android:textStyle">normal</item>
@@ -29,11 +29,11 @@
         <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
-    <style name="Registration.BigLabel" parent="@style/Registration.Label">
+    <style name="WhisperPush.Registration.BigLabel" parent="@style/WhisperPush.Registration.Label">
         <item name="android:textSize">20sp</item>
     </style>
 
-    <style name="Registration.Constant" parent="@android:style/TextAppearance">
+    <style name="WhisperPush.Registration.Constant" parent="@android:style/TextAppearance">
         <item name="android:typeface">sans</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textColor">#DE000000</item>

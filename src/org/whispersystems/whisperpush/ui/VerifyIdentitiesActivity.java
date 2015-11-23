@@ -43,7 +43,7 @@ public class VerifyIdentitiesActivity extends ListActivity
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        setContentView(R.layout.verify_identities_activity);
+        setContentView(R.layout.wp_verify_identities_activity);
 
         initializeListAdapter();
         getLoaderManager().initLoader(0, null, this);
@@ -104,7 +104,7 @@ public class VerifyIdentitiesActivity extends ListActivity
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return inflater.inflate(R.layout.pending_identity_item_view, parent, false);
+            return inflater.inflate(R.layout.wp_pending_identity_item_view, parent, false);
         }
     }
 }

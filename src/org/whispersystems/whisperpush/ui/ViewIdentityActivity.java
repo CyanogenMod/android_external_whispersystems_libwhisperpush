@@ -33,7 +33,7 @@ public class ViewIdentityActivity extends KeyScanningActivity {
     public void onCreate(Bundle state) {
         super.onCreate(state);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        setContentView(R.layout.view_identity_activity);
+        setContentView(R.layout.wp_view_identity_activity);
 
         initializeResources();
     }

@@ -36,7 +36,7 @@
                         android:contentDescription="@string/registration_progress_activity__alert"/>
 
                 <TextView
-                        style="@style/Registration.Constant"
+                        style="@style/WhisperPush.Registration.Constant"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignBottom="@id/alert"
@@ -71,7 +71,7 @@
                            android:src="@drawable/telephone"
                            android:contentDescription="@string/registration_progress_activity__telephone"/>
 
-                <TextView style="@style/Registration.Constant"
+                <TextView style="@style/WhisperPush.Registration.Constant"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
                           android:layout_alignBottom="@id/telephone"
@@ -164,7 +164,7 @@
                         android:contentDescription="@string/registration_progress_activity__alert"/>
 
                 <TextView
-                        style="@style/Registration.Constant"
+                        style="@style/WhisperPush.Registration.Constant"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignBottom="@id/connectivity_alert"
@@ -195,7 +195,7 @@
                     android:textStyle="bold" />
 
             <TextView
-                    style="@style/Registration.Description"
+                    style="@style/WhisperPush.Registration.Description"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dip"
@@ -208,7 +208,7 @@
                 <TableRow>
 
                     <TextView
-                            style="@style/Registration.Description"
+                            style="@style/WhisperPush.Registration.Description"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingRight="10dip"
@@ -220,14 +220,14 @@
                             android:orientation="vertical" >
 
                         <TextView
-                                style="@style/Registration.Description"
+                                style="@style/WhisperPush.Registration.Description"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/registration_progress_activity__no_network_connectivity"
                                 android:textStyle="bold" />
 
                         <TextView
-                                style="@style/Registration.Description"
+                                style="@style/WhisperPush.Registration.Description"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:paddingRight="10dip"
@@ -238,7 +238,7 @@
                 <TableRow>
 
                     <TextView
-                            style="@style/Registration.Description"
+                            style="@style/WhisperPush.Registration.Description"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingRight="10dip"
@@ -250,14 +250,14 @@
                             android:orientation="vertical" >
 
                         <TextView
-                                style="@style/Registration.Description"
+                                style="@style/WhisperPush.Registration.Description"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/registration_progress_activity__restrictive_firewall"
                                 android:textStyle="bold" />
 
                         <TextView
-                                style="@style/Registration.Description"
+                                style="@style/WhisperPush.Registration.Description"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:paddingRight="10dip"
@@ -277,7 +277,7 @@
                 android:paddingRight="16dip" >
 
             <TextView
-                    style="@style/Registration.Description"
+                    style="@style/WhisperPush.Registration.Description"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dip"
@@ -327,7 +327,7 @@
 
                     <TextView
                             android:id="@+id/connecting_text"
-                            style="@style/Registration.Constant"
+                            style="@style/WhisperPush.Registration.Constant"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="4.0dip"
@@ -371,7 +371,7 @@
 
                     <TextView
                             android:id="@+id/verification_text"
-                            style="@style/Registration.Constant"
+                            style="@style/WhisperPush.Registration.Constant"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="4.0dip"
@@ -415,7 +415,7 @@
 
                     <TextView
                             android:id="@+id/generating_keys_text"
-                            style="@style/Registration.Constant"
+                            style="@style/WhisperPush.Registration.Constant"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="4.0dip"
@@ -460,7 +460,7 @@
 
                     <TextView
                             android:id="@+id/gcm_registering_text"
-                            style="@style/Registration.Constant"
+                            style="@style/WhisperPush.Registration.Constant"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingLeft="4.0dip"
@@ -472,7 +472,7 @@
             </TableLayout>
 
             <TextView
-                    style="@style/Registration.Description"
+                    style="@style/WhisperPush.Registration.Description"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:paddingLeft="5dip"
@@ -487,7 +487,7 @@
 
                 <TextView
                         android:id="@+id/registration_timer"
-                        style="@style/Registration.Constant"
+                        style="@style/WhisperPush.Registration.Constant"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentRight="true"
@@ -495,7 +495,7 @@
                         android:textSize="12.0sp" />
 
                 <TextView
-                        style="@style/Registration.Constant"
+                        style="@style/WhisperPush.Registration.Constant"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentLeft="true"

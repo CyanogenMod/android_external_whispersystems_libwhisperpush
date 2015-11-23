@@ -52,7 +52,7 @@ public class VerifyIdentityActivity extends KeyScanningActivity {
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         getActionBar().setDisplayHomeAsUpEnabled(true);
-        setContentView(R.layout.verify_identity_activity);
+        setContentView(R.layout.wp_verify_identity_activity);
 
         initializeResources();
     }

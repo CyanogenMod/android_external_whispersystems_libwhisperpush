@@ -111,7 +111,7 @@ public class RegistrationService extends Service {
                 (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 
         List<String> regNumbers = Arrays
-                .asList(getResources().getStringArray(R.array.default_registration_numbers));
+                .asList(getResources().getStringArray(R.array.whisperpush_default_registration_numbers));
         for (String number : regNumbers) {
             tm.addProtectedSmsAddress(number);
         }

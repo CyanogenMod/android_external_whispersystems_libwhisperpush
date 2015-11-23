@@ -82,7 +82,7 @@ public class RegistrationActivity extends Activity {
             finish();
         }
 
-        setContentView(R.layout.registration_activity);
+        setContentView(R.layout.wp_registration_activity);
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);

@@ -36,7 +36,7 @@ public class CountrySelectionActivity extends Activity
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        this.setContentView(R.layout.country_selection);
+        this.setContentView(R.layout.wp_country_selection);
     }
 
     @Override

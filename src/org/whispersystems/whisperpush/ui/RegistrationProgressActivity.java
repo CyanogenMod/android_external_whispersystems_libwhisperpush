@@ -108,7 +108,7 @@ public class RegistrationProgressActivity extends Activity {
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         getActionBar().setTitle(getString(R.string.RegistrationProgressActivity_verifying_number));
-        setContentView(R.layout.registration_progress_activity);
+        setContentView(R.layout.wp_registration_progress_activity);
 
         initializeResources();
         initializeLinks();

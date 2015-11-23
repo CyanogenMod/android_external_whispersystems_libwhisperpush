@@ -52,7 +52,7 @@ public class CountrySelectionFragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
-        return inflater.inflate(R.layout.country_selection_fragment, container, false);
+        return inflater.inflate(R.layout.wp_country_selection_fragment, container, false);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class CountrySelectionFragment
     {
         String[] from = {"country_name", "country_code"};
         int[] to      = {R.id.country_name, R.id.country_code};
-        this.setListAdapter(new SimpleAdapter(getActivity(), results, R.layout.country_list_item, from, to));
+        this.setListAdapter(new SimpleAdapter(getActivity(), results, R.layout.wp_country_list_item, from, to));
 
         if (this.countryFilter != null && this.countryFilter.getText().length() != 0) {
             ((SimpleAdapter)getListAdapter()).getFilter().filter(this.countryFilter.getText().toString());

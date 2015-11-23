@@ -12,13 +12,13 @@
                   android:layout_height="wrap_content"
                   android:orientation="vertical">
 
-        <TextView style="@style/Registration.Description"
+        <TextView style="@style/WhisperPush.Registration.Description"
                   android:layout_width="fill_parent"
                   android:layout_marginBottom="16dip"
                   android:layout_marginTop="16dip"
                   android:text="@string/registration_activity__please_confirm_your_country_code_and_phone_number"/>
 
-        <TextView style="@style/Registration.Label"
+        <TextView style="@style/WhisperPush.Registration.Label"
                   android:layout_width="fill_parent"
                   android:textAllCaps="true"
                   android:text="@string/registration_activity__your_country" />
@@ -28,7 +28,7 @@
                  android:layout_height="wrap_content"
                  android:layout_marginBottom="16dip" />
 
-        <TextView style="@style/Registration.Label"
+        <TextView style="@style/WhisperPush.Registration.Label"
                   android:layout_width="fill_parent"
                   android:textAllCaps="true"
                   android:text="@string/registration_activity__your_country_code_and_phone_number" />
@@ -40,7 +40,7 @@
             <TextView android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:textSize="20sp"
-                      style="@style/Registration.Constant"
+                      style="@style/WhisperPush.Registration.Constant"
                       android:text="@string/generic__plus" />
 
             <EditText android:id="@+id/country_code"
