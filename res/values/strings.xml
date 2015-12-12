@@ -205,10 +205,10 @@
     <string name="pref_menu__terms_of_service">Terms of Service</string>
 
     <string name="pref_register__title">Register</string>
-    <string name="pref_register__summary">Register for WhisperPush to enable encrypted SMS and MMS</string>
+    <string name="pref_register__summary">Register for WhisperPush to enable encrypted messaging</string>
 
     <string name="pref_unregister__title">Unregister</string>
-    <string name="pref_unregister__summary">Unregister from WhisperPush to disable encrypted SMS and MMS</string>
+    <string name="pref_unregister__summary">Unregister from WhisperPush to disable encrypted messaging</string>
     <string name="pref_unregister__progress_title">Unregistering</string>
 
     <string name="pref_review_keys__title">Review identity keys</string>
